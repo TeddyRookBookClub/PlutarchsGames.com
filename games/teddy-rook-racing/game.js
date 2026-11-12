@@ -2164,7 +2164,7 @@ function buildMenu() {
   $('btnStart').addEventListener('click', () => OPT.mode === 'gp' ? gpBegin() : startRace());
   $('btnResume').addEventListener('click', togglePause);
   $('btnRestart').addEventListener('click', () => { Sound.pause(false); startRace(); });
-  $('btnQuit').addEventListener('click', toMenu); $('btnMenu').addEventListener('click', toMenu); $('btnAgain').addEventListener('click', () => GP.active ? gpNext() : startRace());
+  $('btnQuit').addEventListener('click', toMenu); $('hudMenu').addEventListener('click', () => { if (G.state === 'racing' || G.state === 'countdown') togglePause(); }); $('btnMenu').addEventListener('click', toMenu); $('btnAgain').addEventListener('click', () => GP.active ? gpNext() : startRace());
   syncMenu();
 }
 function syncMenu(typing) {

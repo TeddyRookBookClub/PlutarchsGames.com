@@ -203,3 +203,11 @@ tr.me td{background:rgba(255,255,255,.1);color:var(--accent)}
   #cornerBox{transform:scale(.75);transform-origin:bottom center}
 }
 @media (max-height:560px){.pod .who svg{width:48px;height:48px}.pod.p1 .step{height:90px}.pod.p2 .step{height:66px}.pod.p3 .step{height:50px}.pod .step span,.pod .step em{font-size:1.4rem}#cupEnd .box{gap:8px;padding:16px}}
+/* way out: a menu button during races, and a link back to the site */
+#hudMenu{position:absolute;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translateX(-50%);pointer-events:auto;z-index:3;
+  font:800 13px var(--body);color:#fff;background:rgba(13,19,38,.6);border:1.5px solid rgba(255,255,255,.4);border-radius:999px;padding:6px 14px;text-shadow:none;cursor:pointer}
+#hudMenu:hover{background:rgba(13,19,38,.85)}
+#hPts{margin-top:30px}
+@media (pointer:coarse){#hudMenu{display:none}}
+.sitelink{display:inline-block;margin-bottom:6px;font:800 13px var(--body);color:var(--mist);text-decoration:none}.sitelink:hover{color:#fff}
+.linkbtn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;color:inherit}

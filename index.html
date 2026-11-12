@@ -59,9 +59,9 @@
   var state = { cat: 'all', q: '' };
   function esc(s) { return s.replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function tile(g, allowBig) {
-    return '<a class="tile' + (allowBig && g.big ? ' big' : '') + '" href="/games/' + g.slug + '/">' +
+    return '<a class="tile' + (allowBig && g.big ? ' big' : '') + '" href="' + (g.href || '/games/' + g.slug + '/') + '">' +
       '<div class="thumb" style="background-image:url(/img/games/' + g.slug + '.jpg)"></div>' +
-      (g.new ? '<span class="badge">New</span>' : '') +
+      (g.new ? '<span class="badge">New</span>' : g.badge ? '<span class="badge">' + g.badge + '</span>' : '') +
       '<div class="body"><b>' + esc(g.title) + '</b><small>' + esc(g.blurb) + '</small>' +
       '<div class="tags"><span class="tag">' + C[g.cat].split(' ')[0] + '</span></div></div></a>';
   }

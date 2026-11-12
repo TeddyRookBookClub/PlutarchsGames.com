@@ -144,9 +144,20 @@
     return { hero: hero, eagle: eagle, foe: pick.c, route: route, slack: pick.s };
   }
 
+  // Options from the Eagle Hunt setup card: forest size, how the board turns, how many warriors, pick-ups.
+  function tune(P, o) {
+    if (!o) return P;
+    if (o.size) P.n = Math.max(4, Math.min(15, P.n + o.size));
+    if (o.turns === 'off') { P.rotEvery = 1e9; P.startTurned = false; }
+    else if (o.turns === 'gentle') { P.rotEvery *= 1.6; P.allow180 = false; }
+    else if (o.turns === 'wild') { P.rotEvery = Math.max(2.2, P.rotEvery * 0.55); P.allow180 = true; P.startTurned = true; }
+    if (o.turns === 'wild' || o.turns === 'gentle') P.turnStyle = o.turns;
+    return P;
+  }
+  var GIFTS = ['pilum', 'calcei', 'nebula', 'nummi'];
   function newRound(round, seed, opt) {
     opt = opt || {};
-    var P = params(round), r = rng(seed), m, L, tries = 0;
+    var P = tune(params(round), opt.tune), r = rng(seed), m, L, tries = 0;
     do { m = genMaze(P.n, r, P.braid); L = layout(m, P, r, tries >= 40); tries++; } while (!L);
     var q = 0;
     if (P.startTurned) q = 1 + Math.floor(r() * 3);
@@ -158,8 +169,26 @@
       eagle: L.eagle, route: L.route, slack: L.slack, par: (L.route.length - 1) / P.vP,
       q: q, ang: q * Math.PI / 2, spinFrom: 0, spinTo: 0, spinT: 0, freeze: 0,
       rotT: P.rotEvery * (0.45 + 0.2 * r()), warned: false, nextDq: 0, turns: 0,
-      t: 0, elapsed: 0, anim: 0, glow: 0, over: null
+      t: 0, elapsed: 0, anim: 0, glow: 0, over: null,
+      extra: extraFoes(m, P, r, L, (opt.tune && opt.tune.foes) || 1), gifts: placeGifts(m, r, L, opt.tune && opt.tune.gifts), stun: 0, boots: 0, calm: 0, bonusPts: 0
     };
+  }
+  // More warriors start farther away and later, so the best route stays fair.
+  function extraFoes(m, P, r, L, n) {
+    var out = []; if (n <= 1) return out;
+    var dh = bfs(m, L.hero.x, L.hero.y), cand = cellsOf(m).filter(function (c) { return dh[c.y * m.S + c.x] >= P.minGap + 2 && !(c.x === L.foe.x && c.y === L.foe.y) && !(c.x === L.eagle.x && c.y === L.eagle.y); });
+    cand.forEach(function (c) { c.s = slack(m, L.route, c, P); }); cand.sort(function (a, b) { return b.s - a.s; });
+    for (var i = 0; i < n - 1 && i < cand.length; i++) { var c = cand[Math.min(cand.length - 1, i * 2 + Math.floor(r() * 2))]; out.push({ x: c.x, y: c.y, dir: 'up', p: 0, moving: false, delay: 1.2 + i * 1.1 }); }
+    return out;
+  }
+  function placeGifts(m, r, L, on) {
+    if (!on) return [];
+    var onRoute = {}; L.route.forEach(function (c) { onRoute[c.y * m.S + c.x] = 1; });
+    var spots = cellsOf(m).filter(function (c) { return !(c.x === L.hero.x && c.y === L.hero.y) && !(c.x === L.eagle.x && c.y === L.eagle.y); });
+    shuffle(spots, r); var g = [], k = 2 + Math.floor(r() * 2);
+    // one gift just off the best route, the others anywhere
+    for (var i = 0; i < spots.length && g.length < k; i++) { var c = spots[i]; if (g.length === 0 && onRoute[c.y * m.S + c.x]) continue; g.push({ x: c.x, y: c.y, k: GIFTS[(g.length + Math.floor(r() * 4)) % 4] }); }
+    return g;
   }
 
   function can(m, e, d) { if (!d) return false; var v = DIRS[d]; return isOpen(m, e.x + v[0], e.y + v[1]); }
@@ -171,18 +200,19 @@
     } else if (h.next === OPP[h.dir]) {
       var b = DIRS[h.dir]; h.x += b[0]; h.y += b[1]; h.p = 1 - h.p; h.dir = h.next;
     }
-    h.moved = true; h.face = h.dir; h.p += H.P.vP * dt; h.mouth += dt * 12;
+    h.moved = true; h.face = h.dir; h.p += H.P.vP * (H.boots > 0 ? 1.4 : 1) * dt; h.mouth += dt * 12;
     while (h.p >= 1) {
       var v = DIRS[h.dir]; h.x += v[0]; h.y += v[1]; h.p -= 1;
       if (h.x === H.eagle.x && h.y === H.eagle.y) { h.p = 0; return true; }
+      for (var gi = 0; H.gifts && gi < H.gifts.length; gi++) if (H.gifts[gi].x === h.x && H.gifts[gi].y === h.y) { var gk = H.gifts.splice(gi, 1)[0].k; H.got = gk; if (gk === 'pilum') H.stun = 3; else if (gk === 'calcei') H.boots = 4; else if (gk === 'nebula') H.calm = 7; else H.bonusPts += 50; break; }
       if (can(m, h, h.next)) h.dir = h.next;
       if (!can(m, h, h.dir)) { h.p = 0; break; }
     }
     h.face = h.dir;
     return false;
   }
-  function chase(H) { // the warrior's next step on a shortest route to the hero
-    var f = H.foe, m = H.m, d = bfs(m, H.hero.x, H.hero.y), best = null, bd = 1e9;
+  function chase(H, who) { // the warrior's next step on a shortest route to the hero
+    var f = who || H.foe, m = H.m, d = bfs(m, H.hero.x, H.hero.y), best = null, bd = 1e9;
     for (var i = 0; i < 4; i++) {
       var dir = CLOCK[i], v = DIRS[dir], nx = f.x + v[0], ny = f.y + v[1];
       if (!isOpen(m, nx, ny)) continue;
@@ -190,18 +220,18 @@
     }
     return best;
   }
-  function moveFoe(H, dt) {
-    var f = H.foe, sp = foeSpeed(H.t, H.P);
-    if (sp <= 0) return;
-    if (f.p === 0) { var d = chase(H); if (!d) return; f.dir = d; }
+  function moveFoe(H, dt, who) {
+    var f = who || H.foe, sp = foeSpeed(H.t - (f.delay || 0), H.P);
+    if (sp <= 0 || H.stun > 0) { f.moving = false; return; }
+    if (f.p === 0) { var d = chase(H, f); if (!d) return; f.dir = d; }
     f.moving = true; f.p += sp * dt;
     while (f.p >= 1) {
       var v = DIRS[f.dir]; f.x += v[0]; f.y += v[1]; f.p -= 1;
-      var nd = chase(H); if (!nd) { f.p = 0; break; } f.dir = nd;
+      var nd = chase(H, f); if (!nd) { f.p = 0; break; } f.dir = nd;
     }
   }
   function pos(e) { var v = DIRS[e.dir] || [0, 0]; return { x: e.x + v[0] * e.p, y: e.y + v[1] * e.p }; }
-  function caught(H) { var a = pos(H.hero), b = pos(H.foe); return Math.abs(a.x - b.x) + Math.abs(a.y - b.y) < CATCH; }
+  function caught(H) { var a = pos(H.hero); return [H.foe].concat(H.extra || []).some(function (f) { var b = pos(f); return Math.abs(a.x - b.x) + Math.abs(a.y - b.y) < CATCH; }); }
   function ease(k) { return k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2; }
   function pickTurn(H) { var opts = H.P.allow180 ? [1, -1, 1, -1, 2] : [1, -1]; return opts[Math.floor(H.r() * opts.length)]; }
   function turn(H, instant) {
@@ -220,11 +250,13 @@
     H.anim += dt; H.glow = Math.max(0, H.glow - dt * 0.8);
     if (H.spinT > 0) { H.spinT = Math.max(0, H.spinT - dt); H.ang = H.spinFrom + (H.spinTo - H.spinFrom) * ease(1 - H.spinT / SPIN); }
     if (H.freeze > 0) { H.freeze = Math.max(0, H.freeze - dt); return ev; }
-    H.t += dt; H.elapsed += dt; H.rotT -= dt;
+    H.t += dt; H.elapsed += dt; if (H.calm > 0) H.calm -= dt; else H.rotT -= dt;
+    if (H.stun > 0) H.stun -= dt; if (H.boots > 0) H.boots -= dt;
     if (!H.warned && H.rotT <= WARN) { H.warned = true; H.nextDq = pickTurn(H); ev.push('warn'); }
     if (H.rotT <= 0) { turn(H, opt && opt.instant); ev.push('turn'); return ev; }
     if (moveHero(H, dt)) { H.over = 'win'; ev.push('win'); return ev; }
-    moveFoe(H, dt);
+    moveFoe(H, dt); (H.extra || []).forEach(function (f) { moveFoe(H, dt, f); });
+    if (H.got) { ev.push('gift:' + H.got); H.got = null; }
     if (caught(H)) { H.over = 'caught'; ev.push('caught'); }
     return ev;
   }
@@ -250,7 +282,7 @@
     DIRS: DIRS, CLOCK: CLOCK, OPP: OPP, SPIN: SPIN, WARN: WARN, CATCH: CATCH,
     rng: rng, params: params, genMaze: genMaze, isOpen: isOpen, bfs: bfs, path: path,
     foeSpeed: foeSpeed, foeDist: foeDist, foeTime: foeTime, slack: slack, layout: layout,
-    newRound: newRound, step: step, turn: turn, pos: pos, caught: caught, chase: chase,
+    newRound: newRound, step: step, tune: tune, GIFTS: GIFTS, turn: turn, pos: pos, caught: caught, chase: chase,
     inputToBoard: inputToBoard, boardToScreen: boardToScreen, screenToBoard: screenToBoard, rotVec: rotVec, quarter: quarter,
     points: points, nextRound: nextRound
   };
@@ -719,6 +751,13 @@
         if (act === 'menu') { prevCard = null; toMenu(); }
       };
     });
+    Array.prototype.forEach.call(el.querySelectorAll('[data-ho]'), function (b) {
+      b.onclick = function () {
+        var k = b.dataset.ho, v = b.dataset.v; HO[k] = v === 'true' ? true : v === 'false' ? false : isNaN(+v) ? v : +v; saveHO();
+        if (gameMode === 'hunt' && S && S.eagles === 0 && S.lives === 3) { S.round = HO.start || 1; S.score = 0; beginHuntRound(); state = 'card'; }
+        refreshCard();
+      };
+    });
     var h = el.querySelector('.helpbtn'); if (h) h.onclick = function () { if (cardHTML && !cardIsHelp) prevCard = cardHTML; card(helpCard, true); };
   }
   function goals() { return '<ul class="tb-goals"><li>🪙 ' + T(X.goal1) + '</li><li>🦅 ' + T(X.goal3) + '</li><li>⚠️ ' + T(X.goal2) + '</li></ul>'; }
@@ -726,7 +765,7 @@
     return '<h2>' + T(X.title) + '</h2><p class="lead">' + (showEn ? 'You are a Roman legionary in the forests of Germania. Choose how to play:' : '') + '</p>' +
       '<div class="tb-modes">' +
       modeBtn('new', '🪙', XH.mClassic, 'September, AD 9. Collect coins over three days, grab the eagle standards and escape four Germanic tribes.') +
-      modeBtn('hunt', '🦅', XH.mHunt, 'AD 15–16. Race one warrior to a lost eagle while the forest board turns. Up always runs north.', '<span class="tb-mrec">' + recLine('hunt').replace(/<\/?p[^>]*>/g, '') + '</span>') +
+      modeBtn('hunt', '🦅', XH.mHunt, 'AD 15–16. Race to a lost eagle while the forest board turns. Up always runs north. Choose the forest, the turns, up to three warriors, night, pick-ups and a daily forest.', '<span class="tb-mrec">' + recLine('hunt').replace(/<\/?p[^>]*>/g, '') + '</span>') +
       modeBtn('camp', '⚔️', XH.mCamp, 'Classic days and eagle hunts in turn, a little harder each time, for one score.', '<span class="tb-mrec">' + recLine('camp').replace(/<\/?p[^>]*>/g, '') + '</span>') +
       '</div>' + speedHTML() + '<div class="tb-row"><button type="button" class="tb-btn helpbtn">' + T(X.help) + '</button></div>' +
       '<p class="small">Arrow keys or WASD · swipe or use the buttons on a phone · P pauses. Classic saves nothing; Eagle Hunt and Campaign keep your best scores on this device.</p>';
@@ -801,6 +840,27 @@
 
   // ---------- records (this device only) ----------
   var REC_KEY = 'trb-teutoburg-v1';
+  // Eagle Hunt options, remembered on this device
+  var HO = { size: 0, turns: 'normal', foes: 1, night: false, gifts: true, start: 1, daily: false };
+  try { var hoS = JSON.parse(W.localStorage.getItem('teut-hunt-opts') || '{}'); for (var hk0 in hoS) if (hk0 in HO) HO[hk0] = hoS[hk0]; } catch (e) { }
+  function saveHO() { try { W.localStorage.setItem('teut-hunt-opts', JSON.stringify(HO)); } catch (e) { } }
+  function hoMul() { return Math.round((1 + 0.45 * (HO.foes - 1) + (HO.night ? 0.3 : 0) + (HO.size > 0 ? 0.1 * HO.size / 2 : HO.size * 0.1) + ({ off: -0.35, gentle: -0.15, normal: 0, wild: 0.3 }[HO.turns] || 0) - (HO.gifts ? 0.1 : 0)) * 100) / 100; }
+  function today() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
+  function dailySeed(round) { var s = today() + '#' + round, h = 2166136261; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) % 2147483646 + 1; }
+  var GIFT_ICON = { pilum: ['🗡️', 'Pilum: the warriors are stunned for 3 seconds'], calcei: ['👢', 'Caligae: you run faster for 4 seconds'], nebula: ['🌫️', 'Nebula: the board holds still for 7 seconds'], nummi: ['🪙', 'Nummi: +50 points'] };
+  function huntOptionsHTML() {
+    function seg(key, label, opts) { return '<div class="tb-opt"><span>' + label + '</span><div class="tb-seg">' + opts.map(function (o) { return '<button type="button" class="tb-segb' + (String(HO[key]) === String(o[0]) ? ' on' : '') + '" data-ho="' + key + '" data-v="' + o[0] + '">' + o[1] + '</button>'; }).join('') + '</div></div>'; }
+    return '<details class="tb-opts" open><summary>' + (showEn ? 'Options' : 'Optiones') + ' · <b>' + (showEn ? 'score ×' : '×') + hoMul() + '</b></summary>' +
+      seg('turns', showEn ? 'Board turns' : 'Silva vertitur', [['off', showEn ? 'Never' : 'Numquam'], ['gentle', showEn ? 'Gently' : 'Lente'], ['normal', showEn ? 'Normal' : 'Solite'], ['wild', showEn ? 'Wildly' : 'Ferociter']]) +
+      seg('size', showEn ? 'Forest' : 'Silva', [[-1, showEn ? 'Small' : 'Parva'], [0, showEn ? 'Normal' : 'Media'], [2, showEn ? 'Large' : 'Magna'], [4, showEn ? 'Huge' : 'Ingens']]) +
+      seg('foes', showEn ? 'Warriors' : 'Germani', [[1, '1'], [2, '2'], [3, '3']]) +
+      seg('night', showEn ? 'Time' : 'Tempus', [[false, showEn ? '☀️ Day' : '☀️ Dies'], [true, showEn ? '🌙 Night' : '🌙 Nox']]) +
+      seg('gifts', showEn ? 'Pick-ups' : 'Dona', [[true, showEn ? 'On' : 'Sic'], [false, showEn ? 'Off' : 'Non']]) +
+      seg('start', showEn ? 'Start at round' : 'Incipe', [[1, 'I'], [3, 'III'], [5, 'V'], [8, 'VIII']]) +
+      seg('daily', showEn ? 'Forest' : 'Silva', [[false, showEn ? 'New each time' : 'Nova'], [true, showEn ? '📅 Today’s forest' : '📅 Hodierna']]) +
+      (HO.gifts ? '<p class="small">' + Object.keys(GIFT_ICON).map(function (k) { return GIFT_ICON[k][0] + ' ' + (showEn ? GIFT_ICON[k][1] : k); }).join(' · ') + '</p>' : '') +
+      (HO.daily && showEn ? '<p class="small">Today’s forest is the same for everyone on this date. Your best daily score is kept separately.</p>' : '') + '</details>';
+  }
   function loadRec() { try { var o = JSON.parse(W.localStorage.getItem(REC_KEY) || '{}'); if (o && typeof o === 'object') { o.hunt = o.hunt || {}; o.camp = o.camp || {}; return o; } } catch (e) { } return { hunt: {}, camp: {} }; }
   function saveRec(o) { try { W.localStorage.setItem(REC_KEY, JSON.stringify(o)); } catch (e) { } }
   function noteRecords() { // returns which records this run just beat
@@ -810,6 +870,7 @@
       if (S.score > (h.score || 0)) { h.score = S.score; news.score = 1; }
       if (S.cleared > (h.round || 0)) { h.round = S.cleared; news.round = 1; }
       if (S.bestStreak > (h.streak || 0)) { h.streak = S.bestStreak; news.streak = 1; }
+      if (HO.daily) { h.daily = h.daily || {}; if (S.score > (h.daily[today()] || 0)) { h.daily[today()] = S.score; news.daily = 1; } }
     } else if (gameMode === 'camp') {
       var c = R.camp;
       if (S.score > (c.score || 0)) { c.score = S.score; news.score = 1; }
@@ -847,7 +908,7 @@
   function hudClear() { ['#h-score', '#h-lives', '#h-day', '#h-words'].forEach(function (s) { root.querySelector(s).innerHTML = ''; }); }
   function startHunt() {
     gameMode = 'hunt'; learned = [];
-    S = { score: 0, lives: 3, day: 1, loops: 0, round: 1, streak: 0, bestStreak: 0, cleared: 0, eagles: 0 };
+    S = { score: 0, lives: 3, day: 1, loops: 0, round: HO.start || 1, streak: 0, bestStreak: 0, cleared: 0, eagles: 0 };
     beginHuntRound(); state = 'card'; card(huntIntro);
   }
   function startCampaign() {
@@ -857,7 +918,9 @@
     var dc = dayCard(); card(function () { return campIntro() + dc(); });
   }
   function beginHuntRound() {
-    H = HUNT.newRound(S.round, (Math.random() * 2147483646 | 0) + 1);
+    var hopt = gameMode === 'hunt' ? HO : { foes: S.stage > 6 ? 2 : 1, gifts: true };
+    H = HUNT.newRound(S.round, gameMode === 'hunt' && HO.daily ? dailySeed(S.round) : (Math.random() * 2147483646 | 0) + 1, { tune: hopt });
+    H.night = gameMode === 'hunt' && HO.night;
     player = H.hero; hbg = null; cv.classList.add('hunt'); setPad(true); side('hunt'); huntResize(); renderHud();
     state = 'ready'; hReadyT = 2.2;
   }
@@ -888,11 +951,13 @@
         placeFlash(); flash(XH.turns[0], 'North is now ' + WHERE[H.q] + '.', 'turn');
         if (RM) { var st = root.querySelector('.tb-stage'); st.classList.remove('tflash'); void st.offsetWidth; st.classList.add('tflash'); }
       } else if (e === 'win') {
-        var pts = HUNT.points(S.round, H.elapsed, H.par); S.score += pts; S.streak++; S.eagles++; S.cleared = Math.max(S.cleared, S.round);
+        var pts = Math.round((HUNT.points(S.round, H.elapsed, H.par) + H.bonusPts) * (gameMode === 'hunt' ? hoMul() : 1)); S.score += pts; S.streak++; S.eagles++; S.cleared = Math.max(S.cleared, S.round);
         S.bestStreak = Math.max(S.bestStreak, S.streak); S.lastPts = pts;
         state = 'hwon'; hEndT = 1.3; H.glow = 1;
         flash(XH.won[0] + ' +' + pts, XH.won[1], 'gold');
         if (gameMode === 'hunt') noteRecords();
+      } else if (e.indexOf('gift:') === 0) {
+        var gk = e.slice(5); flash(GIFT_ICON[gk][0] + ' ' + gk, GIFT_ICON[gk][1], 'gold');
       } else if (e === 'caught') {
         S.lives--; S.streak = 0; state = 'dying'; hEndT = 1.5;
         flash(X.caught[0], X.caught[1], 'red');
@@ -1035,9 +1100,19 @@
     upright(ex, ey, a, function () { var lift = state === 'hwon' ? -HT * 0.6 * (1 - hEndT / 1.3) : 0; drawEagle(0, lift, HT * 0.52 * (state === 'hwon' ? 1.3 : 1)); });
     // the warrior stays upright on screen; his eyes look where he runs on screen
     var fp = HUNT.pos(H.foe), fv = HUNT.DIRS[H.foe.dir] || [0, 0], sv = HUNT.rotVec(fv[0], fv[1], a), tribe = TRIBES[S.round % TRIBES.length];
-    upright(hx(fp.x), hx(fp.y), a, function () { drawWarrior(HT * 0.46, tribe.color, sv, H.foe.moving ? H.anim : 0); });
+    upright(hx(fp.x), hx(fp.y), a, function () { drawWarrior(HT * 0.46, tribe.color, sv, H.foe.moving ? H.anim : 0); if (H.stun > 0) stunStars(); });
+    (H.extra || []).forEach(function (f, i) { var p2 = HUNT.pos(f), v2 = HUNT.rotVec((HUNT.DIRS[f.dir] || [0, 0])[0], (HUNT.DIRS[f.dir] || [0, 0])[1], a); upright(hx(p2.x), hx(p2.y), a, function () { drawWarrior(HT * 0.46, TRIBES[(S.round + i + 1) % TRIBES.length].color, v2, f.moving ? H.anim : 0); if (H.stun > 0) stunStars(); }); });
+    (H.gifts || []).forEach(function (g) { upright(hx(g.x), hx(g.y), a, function () { ctx.font = Math.round(HT * 0.7) + 'px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(GIFT_ICON[g.k][0], 0, Math.sin(H.anim * 4 + g.x) * HT * 0.08); }); });
+    function stunStars() { ctx.fillStyle = '#ffe066'; for (var si = 0; si < 3; si++) { var sa = H.anim * 6 + si * 2.1; ctx.beginPath(); ctx.arc(Math.cos(sa) * HT * 0.4, -HT * 0.55 + Math.sin(sa) * HT * 0.12, HT * 0.08, 0, Math.PI * 2); ctx.fill(); } }
     var hp = HUNT.pos(H.hero);
     drawHero(hx(hp.x), hx(hp.y), HT * 0.45, H.hero.face, H.hero.mouth, state === 'dying' ? hEndT / 1.5 : null);
+    if (H.boots > 0) { ctx.strokeStyle = 'rgba(255,230,140,.7)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(hx(hp.x), hx(hp.y), HT * 0.62, 0, Math.PI * 2); ctx.stroke(); }
+    if (H.night) { // only a torch-lit circle around you; the eagle glows through the dark
+      var ng = ctx.createRadialGradient(hx(hp.x), hx(hp.y), HT * 1.2, hx(hp.x), hx(hp.y), HT * 3.6); ng.addColorStop(0, 'rgba(5,8,12,0)'); ng.addColorStop(1, 'rgba(5,8,12,.94)');
+      ctx.fillStyle = ng; ctx.fillRect(-px, -px, px * 3, px * 3);
+      var eg = ctx.createRadialGradient(ex, ey, 1, ex, ey, HT * 1.1); eg.addColorStop(0, 'rgba(255,225,130,.8)'); eg.addColorStop(1, 'rgba(255,225,130,0)'); ctx.fillStyle = eg; ctx.beginPath(); ctx.arc(ex, ey, HT * 1.1, 0, Math.PI * 2); ctx.fill();
+    }
+    if (H.calm > 0) { ctx.fillStyle = 'rgba(220,230,240,' + Math.min(.25, H.calm / 20) + ')'; ctx.fillRect(0, 0, px, px); }
     ctx.restore();
     // compass letters, always upright: a big N on its plaque, small E S W
     function at(bx, by) { var v = HUNT.rotVec(bx - c0, by - c0, a); return [c0 + v[0] * sc, c0 + v[1] * sc]; }
@@ -1078,7 +1153,7 @@
     return '<h2>' + T(XH.mHunt) + '</h2><p class="la big">' + XH.seek[0] + '</p>' +
       (showEn ? '<p class="gloss">' + XH.seek[1] + '</p><p>AD 15 and 16. Germanicus led Roman armies back into Germania and recovered two of the eagles lost with Varus: one found among the Bructeri (Tacitus, <i>Annals</i> 1.60), one dug up from a grove after a leader of the Marsi told where it lay (<i>Annals</i> 2.25). Race through the forest to the eagle before a Germanic warrior catches you.</p>' : '') +
       huntRules() + (showEn ? '<p class="small">Arrow keys or W A S D; on a phone, the N E S W buttons (N always on top) or a swipe (up = north). Each round brings a bigger forest, a faster warrior and more turns. If he catches you, you lose a helmet and try a new forest.</p>' : '') +
-      recLine('hunt') + '<div class="tb-row"><button type="button" class="tb-btn big go" data-act="hplay">' + T(X.start) + '</button><button type="button" class="tb-btn helpbtn">' + T(X.help) + '</button></div>';
+      recLine('hunt') + huntOptionsHTML() + '<div class="tb-row"><button type="button" class="tb-btn big go" data-act="hplay">' + T(X.start) + '</button><button type="button" class="tb-btn helpbtn">' + T(X.help) + '</button></div>';
   }
   function huntNextHTML() {
     return '<h2>' + T([XH.round[0] + ' ' + roman(S.round) + ' · ' + XH.mHunt[0], 'Round ' + S.round + ' · Eagle Hunt']) + '</h2>' + huntRules() +

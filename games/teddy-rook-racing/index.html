@@ -19,12 +19,13 @@
     <canvas id="mini" width="360" height="360"></canvas>
     <canvas id="speedfx"></canvas><div id="flash"></div><div id="itemSlot" hidden><b></b><small></small></div>
     <div id="touch" hidden><div class="tl-pad"><button type="button" data-k="left" aria-label="Steer left">◀</button><button type="button" data-k="right" aria-label="Steer right">▶</button></div><div class="tr-pad"><button type="button" data-k="item" class="t-item" aria-label="Use item">🎁</button><button type="button" data-k="drift" aria-label="Drift">DRIFT</button><button type="button" data-k="boost" aria-label="Boost">BOOST</button><button type="button" data-k="brake" aria-label="Brake">◼</button><button type="button" data-k="gas" class="t-gas" aria-label="Accelerate">GAS</button></div><button type="button" data-k="pause" class="t-pause" aria-label="Pause">❚❚</button></div>
+    <button type="button" id="hudMenu" aria-label="Pause and menu" title="Pause and menu (Esc)">❚❚ Menu</button>
     <div id="count"></div><div id="wrong" hidden>Wrong way</div><div id="streaks"></div>
   </div>
   <div id="menu" class="screen" hidden>
     <div class="panel">
       <div class="scroll">
-        <header><div class="eyebrow">Eighty circuits · eighteen vehicles · every kind of world</div><h1>Teddy Rook <em>Racing</em></h1></header>
+        <header><a class="sitelink" href="/">‹ Plutarch's Games</a><div class="eyebrow">Eighty circuits · eighteen vehicles · every kind of world</div><h1>Teddy Rook <em>Racing</em></h1></header>
         <section><h2>Mode</h2><div data-slot="mode"></div><p class="hint" id="modeHint"></p></section>
         <section><h2>Circuit</h2><div id="trackSel"></div><div class="btns" style="margin-top:8px"><button type="button" class="ghost" id="btnBrowse">Browse all circuits</button><button type="button" class="ghost" id="btnRandom">Surprise me</button></div><p id="trackBlurb"></p></section>
         <section><h2>Driver</h2><div id="chars"></div><p class="hint">Pick who drives. Every driver is the same size and equally quick.</p></section>
@@ -54,8 +55,8 @@
       <div class="startbar"><div id="summary"></div><button type="button" class="big" id="btnStart">Start race</button></div>
     </div>
   </div>
-  <div id="pause" class="screen" hidden><div class="box"><h2>Paused</h2><p>Take a breath and enjoy the view.</p><div class="btns"><button type="button" class="big" id="btnResume">Resume</button><button type="button" class="ghost" id="btnRestart">Restart</button><button type="button" class="ghost" id="btnQuit">Back to setup</button></div></div></div>
-  <div id="results" class="screen" hidden><div class="box"><div><h2 id="resTitle">Finished</h2><p id="resSub"></p></div><div id="resExtra"></div><table id="resTable"></table><table id="gpTable" hidden></table><table id="resLaps"></table><div class="btns"><button type="button" class="big" id="btnAgain">Race again</button><button type="button" class="ghost" id="btnMenu">Back to setup</button></div></div></div>
+  <div id="pause" class="screen" hidden><div class="box"><h2>Paused</h2><p>Take a breath and enjoy the view.</p><div class="btns"><button type="button" class="big" id="btnResume">Resume</button><button type="button" class="ghost" id="btnRestart">Restart</button><button type="button" class="ghost" id="btnQuit">Back to the main menu</button><a class="ghost linkbtn" href="/">Leave for all games</a></div><p class="hint">Esc or P pauses at any time. On a controller, press +.</p></div></div>
+  <div id="results" class="screen" hidden><div class="box"><div><h2 id="resTitle">Finished</h2><p id="resSub"></p></div><div id="resExtra"></div><table id="resTable"></table><table id="gpTable" hidden></table><table id="resLaps"></table><div class="btns"><button type="button" class="big" id="btnAgain">Race again</button><button type="button" class="ghost" id="btnMenu">Back to the main menu</button></div></div></div>
   <div id="browser" class="screen" hidden><div class="brbox"><div class="brhead"><h2>Choose a circuit</h2><input id="brSearch" type="search" placeholder="Search by name, place or world" aria-label="Search circuits"><button type="button" class="ghost" id="brClose">Back</button></div><div id="brChips" class="chips"></div><p class="hint" id="brCount"></p><div id="brGrid" class="cards"></div></div></div>
   <div id="cupEnd" class="screen" hidden><div class="box"><div><h2 id="podTitle">Cup complete</h2><p id="podSub"></p></div><div id="podium"></div><table id="podTable"></table><div class="btns"><button type="button" class="big" id="btnCupAgain">Race this cup again</button><button type="button" class="ghost" id="btnCupMenu">Back to setup</button></div></div></div>
   <canvas id="confetti" hidden></canvas>
