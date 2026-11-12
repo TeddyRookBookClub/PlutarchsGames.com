@@ -69,3 +69,5 @@ main.main:has(.hr){max-width:1100px}
 :root[data-theme="dark"] .hr-lvb,:root[data-theme="dark"] .hr-btn:not(.pri){background:#0b1a13;color:#e6ece8;border-color:#2a4636}
 :root[data-theme="dark"] .hr-lvb:hover:not([disabled]){background:#1b3426}
 :root[data-theme="dark"] .hr-wl td{border-color:#2a4636}
+.hr-stars{font-size:34px;letter-spacing:4px;color:#e0a92a;margin:6px 0 0;text-shadow:0 2px 0 rgba(0,0,0,.2)}.hr-stars span{color:rgba(120,110,90,.35)}
+.hr-lvst{font-style:normal;color:#c8901a;font-size:12px}.hr-tot{font:600 13px system-ui;color:#c8901a}

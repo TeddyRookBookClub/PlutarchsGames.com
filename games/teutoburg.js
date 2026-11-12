@@ -382,13 +382,15 @@
     '#.................#',
     '###################'
   ];
+  // Day 2 is fought in the bog, Day 3 at the turf wall near Kalkriese: each day has its own stretch of road
+  var MAPS = [MAP, ['###################','#.................#','#o##.#.#####.#.##o#','#....#...#...#....#','#.##.###.#.###.##.#','#.................#','####.### # ###.####','   #.#       #.#   ','####.# ##-## #.####','T   .  #GGG#  .   T','####.# ##### #.####','   #.#       #.#   ','####.# ##### #.####','#........#........#','#.###.##.#.##.###.#','#o..#....P....#..o#','###.#.#.###.#.#.###','#.....#..#..#.....#','#.###.##.#.##.###.#','#.................#','###################'], ['###################','#....#.......#....#','#o##.#.##.##.#.##o#','#.................#','#.##.#.#####.#.##.#','#....#...#...#....#','####.### # ###.####','   #.#       #.#   ','####.# ##-## #.####','T   .  #GGG#  .   T','####.# ##### #.####','   #.#       #.#   ','####.# ##### #.####','#........#........#','#.##.##.....##.##.#','#o.#....#P#....#.o#','##.#.##.....##.#.##','#....#..#.#..#....#','#.##...##.##...##.#','#.................#','###################']];
   var CW = MAP[0].length, CH = MAP.length;
   var HOUSE = { x: 9, y: 9 }, DOOR = { x: 9, y: 8 }, EXIT = { x: 9, y: 7 }, START;
   var grid, coins, totalCoins;
   function loadMaze() {
-    grid = []; coins = {}; totalCoins = 0;
+    grid = []; coins = {}; totalCoins = 0; bg = null;
     for (var y = 0; y < CH; y++) for (var x = 0; x < CW; x++) {
-      var c = MAP[y][x]; grid.push(c);
+      var c = MAPS[S ? (S.day - 1) % 3 : 0][y][x]; grid.push(c);
       if (c === '.' || c === 'o') { coins[y * CW + x] = c; totalCoins++; }
       if (c === 'P') START = { x: x, y: y };
     }
@@ -521,6 +523,7 @@
     flash(w[0], w[1], 'word');
     renderHud();
   }
+  W.__tb = { st: function () { return S; }, win: function () { dayWon(); }, coins: function () { return totalCoins; } };
   function dayWon() {
     state = 'card';
     if (gameMode === 'camp') { campaignAfterDay(); return; }
@@ -572,7 +575,8 @@
     c.fillStyle = '#5b4a33'; c.fillRect(0, 0, CW * TS, CH * TS);
     for (var i = 0; i < 700; i++) { c.fillStyle = r() < 0.5 ? 'rgba(40,30,18,.25)' : 'rgba(120,100,70,.18)'; c.beginPath(); c.ellipse(r() * CW * TS, r() * CH * TS, 2 + r() * 5, 1 + r() * 2.5, r() * 3, 0, Math.PI * 2); c.fill(); }
     // puddles (bog)
-    for (i = 0; i < 18; i++) { var px = r() * CW * TS, py = r() * CH * TS; c.fillStyle = 'rgba(70,90,95,.35)'; c.beginPath(); c.ellipse(px, py, 6 + r() * 10, 3 + r() * 5, 0, 0, Math.PI * 2); c.fill(); }
+    var dayN = S ? (S.day - 1) % 3 : 0;
+    for (i = 0; i < 18 + dayN * 30; i++) { var px = r() * CW * TS, py = r() * CH * TS; c.fillStyle = 'rgba(70,90,95,.35)'; c.beginPath(); c.ellipse(px, py, 6 + r() * 10, 3 + r() * 5, 0, 0, Math.PI * 2); c.fill(); }
     // forest walls: dense round tree crowns
     for (var y = 0; y < CH; y++) for (var x = 0; x < CW; x++) {
       if (!isForest(x, y) && cell(x, y) !== ' ' ) continue;
@@ -582,7 +586,7 @@
       for (var k = 0; k < 3; k++) {
         var rr = TS * (0.32 + r() * 0.22), ox = (r() - 0.5) * TS * 0.6, oy = (r() - 0.5) * TS * 0.6;
         var g = c.createRadialGradient(cx + ox - rr * 0.3, cy + oy - rr * 0.3, rr * 0.1, cx + ox, cy + oy, rr);
-        var dark = r() < 0.5; g.addColorStop(0, dark ? '#3f6b3a' : '#4d7a3f'); g.addColorStop(1, dark ? '#1c3620' : '#244426');
+        var dark = r() < 0.5 + dayN * .2; g.addColorStop(0, dark ? '#3f6b3a' : '#4d7a3f'); g.addColorStop(1, dark ? '#1c3620' : '#244426');
         c.fillStyle = g; c.beginPath(); c.arc(cx + ox, cy + oy, rr, 0, Math.PI * 2); c.fill();
       }
     }
@@ -655,7 +659,7 @@
     if (state !== 'card' || S) drawLegionary(pos(player), player.dir, state === 'dying');
     // rain
     ctx.strokeStyle = 'rgba(190,210,225,.35)'; ctx.lineWidth = 1;
-    while (rainDrops.length < 90) rainDrops.push({ x: Math.random() * CW * TS, y: Math.random() * CH * TS, v: 300 + Math.random() * 200 });
+    while (rainDrops.length < 90 + (S ? ((S.day - 1) % 3) * 70 : 0)) rainDrops.push({ x: Math.random() * CW * TS, y: Math.random() * CH * TS, v: 300 + Math.random() * 200 });
     ctx.beginPath(); rainDrops.forEach(function (d) { ctx.moveTo(d.x, d.y); ctx.lineTo(d.x - 3, d.y + 10); d.y += d.v / 60; d.x -= 1; if (d.y > CH * TS) { d.y = -10; d.x = Math.random() * CW * TS; } }); ctx.stroke();
     if (state === 'ready') { ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.fillRect(0, 8.6 * TS, CW * TS, 1.8 * TS); ctx.fillStyle = '#f3dfa3'; ctx.font = 'bold ' + Math.round(TS * 0.9) + 'px Georgia, serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(X.day[0] + ' ' + roman(S.day) + ' · ' + X.goal1[0], CW * TS / 2, 9.5 * TS); }
   }
@@ -1017,7 +1021,7 @@
       for (var k = 0; k < 3; k++) {
         var rr = HT * (0.32 + r() * 0.22), ox = (r() - 0.5) * HT * 0.6, oy = (r() - 0.5) * HT * 0.6;
         var g = c.createRadialGradient(cx + ox - rr * 0.3, cy + oy - rr * 0.3, rr * 0.1, cx + ox, cy + oy, rr);
-        var dark = r() < 0.5; g.addColorStop(0, dark ? '#3f6b3a' : '#4d7a3f'); g.addColorStop(1, dark ? '#1c3620' : '#244426');
+        var dark = r() < 0.5 + dayN * .2; g.addColorStop(0, dark ? '#3f6b3a' : '#4d7a3f'); g.addColorStop(1, dark ? '#1c3620' : '#244426');
         c.fillStyle = g; c.beginPath(); c.arc(cx + ox, cy + oy, rr, 0, Math.PI * 2); c.fill();
       }
     }

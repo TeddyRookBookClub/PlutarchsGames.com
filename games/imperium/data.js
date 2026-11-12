@@ -119,7 +119,42 @@
         F('per', 'Persia', 'οἱ Πέρσαι', 'Artaxerxes I', 'Great King 465–424 BC; his satrap Pissuthnes governed from Sardis.', '#20242c', ['lydia', 'phrygia', 'caria', 'mysia']),
         F('mak', 'Macedon', 'οἱ Μακεδόνες', 'Perdiccas II', 'King of Macedon c. 448–413 BC; changed sides repeatedly.', '#3f8f4f', ['macedonia']),
         F('thr', 'Thrace', 'οἱ Θρᾷκες', 'Sitalces', 'King of the Odrysian Thracians, an ally of Athens.', '#1f8a70', ['thracia', 'chersonesus'])],
-      order: ['lak', 'ath', 'the', 'kor', 'per', 'mak', 'thr'] }
+      order: ['lak', 'ath', 'the', 'kor', 'per', 'mak', 'thr'] },
+    { id: 'philippos', map: 'aegaeum', lang: 'gr', side: 'Greece', title: 'Φίλιππος', date: '357 BC', sub: 'Philip of Macedon and the end of Greek freedom',
+      blurb: 'Philip II has made Macedon’s army the best in Greece, with long pikes and paid cavalry. Athens, whose orator Demosthenes warns against him, still rules the sea. The Phocians have seized the treasures of Delphi and started a Sacred War; Thebes, Thessaly and Persia all have their own plans. It ended at Chaeronea in 338 BC.',
+      factions: [
+        F('mak', 'Macedon', 'οἱ Μακεδόνες', 'Philip II', 'King 359–336 BC; father of Alexander. Took Amphipolis in 357 BC.', '#3f8f4f', ['macedonia']),
+        F('ath', 'Athens', 'οἱ Ἀθηναῖοι', 'Demosthenes', 'Orator who spent twenty years warning Athens against Philip in his Philippics.', '#2f6fb2', ['attica', 'euboea', 'chersonesus', 'lemnos', 'cyclades']),
+        F('the', 'Thebes', 'οἱ Θηβαῖοι', 'Theagenes', 'Commanded the Thebans and the Sacred Band at Chaeronea.', '#d9660a', ['boeotia']),
+        F('pho', 'Phocis', 'οἱ Φωκεῖς', 'Onomarchus', 'Phocian general who paid mercenaries with the gold of Delphi; beaten by Philip at the Crocus Field in 352 BC.', '#20242c', ['phocis', 'aetolia']),
+        F('ole', 'Olynthus', 'οἱ Ὀλύνθιοι', null, 'Leader of the Chalcidian League; destroyed by Philip in 348 BC.', '#6d3fa0', ['chalcidice']),
+        F('tha', 'Thessaly', 'οἱ Θεσσαλοί', null, 'Its cities were split; Philip became their archon.', '#1f8a70', ['thessalia', 'phthia']),
+        F('per', 'Persia', 'οἱ Πέρσαι', 'Artaxerxes III', 'Great King 358–338 BC, who won back Egypt.', '#8a6d1f', ['lydia', 'phrygia', 'caria', 'mysia', 'ionia']),
+        F('lak', 'Sparta', 'οἱ Λακεδαιμόνιοι', 'Archidamus III', 'King of Sparta; stayed out of the battle at Chaeronea.', '#b3261e', ['laconia'])],
+      order: ['mak', 'ath', 'the', 'pho', 'ole', 'tha', 'per', 'lak'] },
+    { id: 'diadochi', map: 'mare', lang: 'la', side: 'Rome', title: 'Diadochi', date: '301 BC', sub: 'Alexander’s generals divide the world',
+      blurb: 'Alexander is dead and his empire is torn apart by his generals, the Successors. After the battle of Ipsus, Ptolemy holds Egypt, Seleucus the East, Lysimachus Thrace and Asia Minor, and Cassander Macedon. In the west, Agathocles of Syracuse fights Carthage, Rome battles the Samnites, and Pyrrhus of Epirus waits for his chance.',
+      factions: [
+        F('pto', 'Ptolemaic Egypt', 'Aegyptii', 'Ptolemy I', 'Alexander’s general and historian; founded the Library of Alexandria.', '#1f8a70', ['aegyptus', 'cyrenaica', 'cyprus', 'iudaea']),
+        F('sel', 'The Seleucid kingdom', 'Syri', 'Seleucus I', 'Ruled from the Aegean to India; founded Antioch.', '#d9660a', ['syria', 'mesopotamia', 'media', 'cilicia']),
+        F('lys', 'Lysimachus', 'Thraces', 'Lysimachus', 'Bodyguard of Alexander, then king of Thrace and Asia Minor.', '#6d3fa0', ['thracia', 'asia', 'bithynia']),
+        F('cas', 'Macedon', 'Macedones', 'Cassander', 'Son of Antipater; had Alexander’s mother and son killed.', '#2f6fb2', ['macedonia', 'achaia']),
+        F('epi', 'Epirus', 'Epirotae', 'Pyrrhus', 'Cousin of Alexander; his costly victories gave us the phrase “Pyrrhic victory”.', '#8a6d1f', ['illyricum']),
+        F('rom', 'Rome', 'Romani', 'Appius Claudius', 'Censor who built the Via Appia and the first aqueduct.', '#b3261e', ['italia']),
+        F('syr', 'Syracuse', 'Syracusani', 'Agathocles', 'Tyrant of Syracuse who carried the war to Africa itself.', '#3f8f4f', ['sicilia', 'magnagraecia']),
+        F('poe', 'Carthage', 'Poeni', null, 'The great Phoenician city of the west.', '#20242c', ['africa', 'libya', 'sardinia', 'hispaniaulterior'])],
+      order: ['sel', 'pto', 'lys', 'cas', 'epi', 'rom', 'syr', 'poe'] },
+    { id: 'mithridates', map: 'mare', lang: 'la', side: 'Rome', title: 'Bellum Mithridaticum', date: '88 BC', sub: 'Mithridates of Pontus against Rome',
+      blurb: 'Mithridates VI of Pontus, who had made himself immune to poison, sweeps through Asia and orders the killing of every Roman and Italian there in a single day. Athens joins him. Rome, torn by civil war between Marius and Sulla, sends Sulla east. Armenia under Tigranes the Great is rising; Parthia watches.',
+      factions: [
+        F('rom', 'Rome', 'Romani', 'Sulla', 'Marched on Rome itself in 88 BC, then sailed east and took Athens in 86 BC.', '#b3261e', ['italia', 'magnagraecia', 'sicilia', 'sardinia', 'cisalpina', 'narbonensis', 'hispaniaciterior', 'africa', 'macedonia']),
+        F('pon', 'Pontus', 'Pontici', 'Mithridates VI', 'King of Pontus 120–63 BC; spoke the languages of all twenty-two peoples he ruled.', '#6d3fa0', ['cappadocia', 'galatia', 'bithynia', 'asia', 'achaia']),
+        F('arm', 'Armenia', 'Armenii', 'Tigranes the Great', 'Mithridates’ son-in-law; built an empire from the Caspian to Syria.', '#d9660a', ['armenia', 'mesopotamia']),
+        F('par', 'Parthia', 'Parthi', 'Mithridates II', 'Parthian king who first made contact with Rome, on the Euphrates in 96 BC.', '#20242c', ['media', 'arabia']),
+        F('aeg', 'Ptolemaic Egypt', 'Aegyptii', 'Ptolemy IX', 'Nicknamed Lathyros, “chickpea”.', '#1f8a70', ['aegyptus', 'cyprus', 'cyrenaica']),
+        F('sel', 'The last Seleucids', 'Syri', 'Antiochus X', 'One of several rival heirs of a dying kingdom.', '#8a6d1f', ['syria', 'cilicia', 'iudaea']),
+        F('num', 'Numidia', 'Numidae', 'Hiempsal II', 'King of Numidia, a friend of Rome.', '#3f8f4f', ['numidia', 'mauretania'])],
+      order: ['pon', 'rom', 'arm', 'par', 'aeg', 'sel', 'num'] }
   ];
   // Phrases used by the narration. Kept to short classical patterns.
   var TEXT = {

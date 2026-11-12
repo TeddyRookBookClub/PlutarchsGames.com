@@ -23,3 +23,10 @@ main.main:has(.th){max-width:1100px}
 .th-opts{display:grid;grid-template-columns:1fr 1fr;gap:.4rem;margin:.6rem 0}.th-opts .th-btn{margin:0}
 .th-small{font-size:.8rem;color:#5d6862}
 .th-box details{text-align:left;font-size:.92rem;margin-top:.5rem}.th-box summary{cursor:pointer;font-weight:700;color:#8c1d2c}
+#th-molon{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.4);background:rgba(0,0,0,.35);color:#f3ead2;border-radius:999px;padding:3px 10px;font:600 13px "Gentium Book Plus",Georgia,serif;opacity:.6}
+#th-molon::before{content:"";position:absolute;inset:0;width:calc(var(--m,0)*100%);background:rgba(216,184,96,.45);z-index:-1}
+#th-molon.ready{opacity:1;background:#8c1d2c;animation:thpulse 1s infinite}
+@keyframes thpulse{50%{box-shadow:0 0 0 6px rgba(216,184,96,.35)}}
+.th-ups{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:6px;margin:6px 0 10px;text-align:left}
+.th-up{display:flex;flex-direction:column;gap:2px;border:1.5px solid rgba(120,90,40,.45);background:rgba(255,250,235,.7);border-radius:10px;padding:7px 9px;font:inherit;color:inherit;cursor:pointer}
+.th-up small{opacity:.75;font-size:12px}.th-up span{font-size:12px;font-weight:700;color:#8c1d2c}.th-up:disabled{opacity:.45;cursor:default}
