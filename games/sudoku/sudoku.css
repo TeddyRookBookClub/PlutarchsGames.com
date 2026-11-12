@@ -1,0 +1,56 @@
+/* Sudoku: a calm board with clear highlighting, like the best sudoku apps */
+.sd{max-width:1060px;margin:0 auto;padding:12px 12px 40px}
+.sd-top{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sd-info{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;font-size:14px;color:var(--mute);margin:6px 2px 10px}
+.sd-info b{color:var(--ink)}
+.sd-time{display:flex;align-items:center;gap:6px}.sd-time b{font-variant-numeric:tabular-nums;font-size:16px}
+.sd-time button{border:1px solid var(--line);background:var(--panel);border-radius:8px;width:30px;height:28px}
+.sd-main{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:18px;align-items:start}
+.sd.big .sd-main{grid-template-columns:minmax(0,1fr) 300px}
+.sd-boardwrap{position:relative;max-width:max(320px,calc(100vh - 170px));width:100%;margin:0 auto}
+.sd-board{display:grid;grid-template-columns:repeat(var(--n),1fr);aspect-ratio:1;background:var(--panel);border:2.5px solid var(--ink);border-radius:6px;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.sd-board.hide .c{color:transparent!important}.sd-board.hide .nt{visibility:hidden}
+.c{position:relative;display:grid;place-items:center;border-right:1px solid var(--line);border-bottom:1px solid var(--line);font:500 clamp(18px,4.6vw,34px)/1 var(--ui);color:var(--blue);cursor:pointer;transition:background .12s}
+.sd.big .c{font-size:clamp(9px,1.7vw,17px);font-weight:600}
+.c.br{border-right:2px solid var(--ink)}.c.bb{border-bottom:2px solid var(--ink)}
+.c.given{color:var(--ink);font-weight:600}
+.c.area{background:color-mix(in srgb,var(--g) 9%,var(--panel))}
+.c.same{background:color-mix(in srgb,var(--g) 24%,var(--panel))}
+.c.sel{background:color-mix(in srgb,var(--gold) 55%,var(--panel))}
+.c.wrong{color:#d23a2a}.c.dup:not(.given){color:#d23a2a}
+.c.dup.given{background:color-mix(in srgb,#d23a2a 18%,var(--panel))}
+.c.glow{background:color-mix(in srgb,var(--gold) 70%,var(--panel))!important;transition:background .1s}
+.c.hinted{animation:pop .5s}
+.c.shake{animation:shake .35s}
+@keyframes pop{40%{transform:scale(1.18)}}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.nt{position:absolute;inset:1px;display:grid;grid-template-columns:repeat(var(--b,3),1fr);grid-template-rows:repeat(var(--b,3),1fr);font-size:clamp(7px,1.4vw,12px);color:var(--mute);font-weight:600}
+.sd.big .nt{--b:5;font-size:clamp(4px,.55vw,6.5px)}
+.nt i{font-style:normal;display:grid;place-items:center;line-height:1}.nt i.m{color:var(--g2);background:color-mix(in srgb,var(--gold) 45%,transparent);border-radius:2px}
+.sd-veil{position:absolute;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--bg) 88%,transparent);border-radius:6px;text-align:center}
+.sd-veil p{font:700 22px var(--display);margin:0 0 10px}
+.sd-bar{width:220px;height:8px;border-radius:9px;background:var(--soft);overflow:hidden}.sd-bar i{display:block;height:100%;background:var(--gold);transition:width .2s}
+.sd-side{display:flex;flex-direction:column;gap:12px}
+.sd-tools{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.sd-tools button{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:transparent;color:var(--mute);font-size:12px;font-weight:600;padding:6px 0;border-radius:10px;position:relative}
+.sd-tools button span{display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:var(--soft);font-size:20px;color:var(--ink)}
+.sd-tools button:hover span{background:color-mix(in srgb,var(--gold) 35%,var(--soft))}
+.sd-tools button.on span{background:var(--g);color:var(--cream)}
+.sd-tools em{position:absolute;top:0;right:4px;font-style:normal;font-size:10px;background:var(--gold);color:#1f1806;border-radius:8px;padding:1px 5px}
+.sd-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sd.big .sd-pad{grid-template-columns:repeat(5,1fr);gap:5px}
+.sd-pad button{display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:8px 0;color:var(--blue);box-shadow:var(--shadow)}
+.sd-pad button b{font:500 30px/1 var(--ui)}.sd.big .sd-pad button b{font-size:19px}
+.sd-pad button small{font-size:11px;color:var(--mute);margin-top:2px}
+.sd-pad button:hover{background:var(--soft)}.sd-pad button.cur{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 25%,var(--panel))}
+.sd-pad button.pick{background:var(--g);color:var(--cream)}.sd-pad button.pick small{color:var(--cream)}
+.sd-pad button.done{opacity:.28}
+.dcal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;text-align:center;margin-top:8px}.dcal b{font-size:12px;color:var(--mute)}
+.dd{border:1px solid var(--line);background:var(--panel);border-radius:50%;aspect-ratio:1;font-weight:600}.dd.today{border:2px solid var(--gold)}.dd.won{background:color-mix(in srgb,var(--gold) 30%,var(--panel))}.dd:disabled{opacity:.35}
+.sw{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line);cursor:pointer}.sw input{width:18px;height:18px;accent-color:var(--g);margin-top:2px}.sw small{display:block;color:var(--mute);font-size:12.5px}
+@media (max-width:820px){
+  .sd-main,.sd.big .sd-main{grid-template-columns:1fr}
+  .sd-pad{grid-template-columns:repeat(9,1fr);gap:4px}.sd-pad button{padding:6px 0;border-radius:9px}.sd-pad button b{font-size:24px}
+  .sd.big .sd-pad{grid-template-columns:repeat(13,1fr)}.sd.big .sd-pad button b{font-size:14px}
+  .sd-tools button span{width:40px;height:40px}
+}
