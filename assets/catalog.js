@@ -7,6 +7,8 @@ window.PG_GAMES = [
     blurb: 'A big, hunched raccoon rolls, slaps and barrel-throws across two islands: 16 levels, two bosses, and every other level a runaway mine-cart ride.' },
   { slug: 'heroes-of-hellas', title: 'Heroes of Hellas', cat: 'strategy', new: true, big: true,
     blurb: 'An Age-of-Empires-style strategy game through the Greek myths: Perseus, Theseus, Jason and Heracles, fourteen god powers, a Codex of the gods, optional Homeric Greek, and cheat codes.' },
+  { slug: 'syracuse', title: 'Walls of Syracuse', cat: 'strategy', new: true,
+    blurb: 'Tower defence as Archimedes: claws that lift ships from the sea, catapults, scorpions and burning mirrors against Marcellus and his legions. Four maps, night attacks.' },
   { slug: 'festival', title: 'Ancient Festival Tycoon', cat: 'strategy', new: true,
     blurb: 'Build and run an ancient festival: 67 buildings, 22 scenarios from the Olympics to Caesar’s sea battle, breakdowns, heralds and loans. In Greek or Latin.' },
   { slug: 'charioteer', title: 'Charioteer', cat: 'action',
