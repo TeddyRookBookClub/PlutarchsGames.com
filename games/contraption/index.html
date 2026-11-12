@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Contraption Workshop · Plutarch's Games</title>
+<meta name="description" content="Build a chain-reaction machine from ramps, dominoes, levers, pulleys, springs and a screw lift, then press Run and watch it ring the bell. Ten challenges, a sandbox, and a counter that names the simple machines you used.">
+<meta property="og:title" content="Contraption Workshop">
+<meta property="og:description" content="Build a chain-reaction machine from ramps, dominoes, levers, pulleys, springs and a screw lift, then press Run and watch it ring the bell. Ten challenges, a sandbox, and a counter that names the simple machines you used.">
+<meta property="og:image" content="https://plutarchsgames.com/img/games/contraption.jpg">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/site.css">
+<script src="/assets/theme.js"></script>
+</head>
+<body class="game-page">
+<header class="pg-bar">
+  <a class="pg-logo" href="/"><span class="pg-mark" aria-hidden="true">Π</span><span>Plutarch's Games</span></a>
+  <nav class="pg-nav"><a href="/">All games</a><button class="pg-theme" type="button" aria-label="Switch light or dark"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button></nav>
+</header>
+<main class="main pg-main" id="main-content">
+<h1 class="pg-sr">Contraption Workshop</h1>
+<link rel="stylesheet" href="/games/contraption/contraption.css?v=132718920">
+<style>
+.gbar{display:none}
+@media (max-width:900px),(max-height:560px){
+  html.game-lock,html.game-lock body{overflow:hidden !important;overscroll-behavior:none}
+  .gwrap{position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;background:var(--theme,#fff);padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  .gbar{display:flex;flex:none;align-items:center;gap:.6rem;height:28px;padding:0 .6rem;font:600 13px system-ui,sans-serif;background:#12251b;color:#cfe0d6}
+  .gbar a{color:#f3dfa3;text-decoration:none;box-shadow:none}
+  .gbar span{flex:1;text-align:right;opacity:.7;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .gwrap>.gbox{flex:1 1 auto;min-height:0 !important;height:auto !important;width:auto !important;border:0 !important;border-radius:0 !important;margin:0 !important}
+}
+</style>
+<script>(function(){var m=matchMedia('(max-width: 900px), (max-height: 560px)');function f(){document.documentElement.classList.toggle('game-lock',m.matches)}f();if(m.addEventListener)m.addEventListener('change',f);else m.addListener(f)})();</script>
+
+<div class="gwrap"><div class="gbar"><a href="/">‹ All games</a><span>Contraption Workshop</span></div>
+<div class="cw gbox" id="cw">
+  <div class="cw-top">
+    <h2>Contraption Workshop</h2>
+    <label class="cw-sr" for="cw-level">Level</label>
+    <select id="cw-level"></select>
+    <div class="cw-goal" id="cw-goal"></div>
+    <button type="button" class="cw-btn" id="cw-help" aria-label="How to play">?</button>
+  </div>
+  <div class="cw-main">
+    <div class="cw-stage">
+      <canvas id="cw-can" tabindex="0" role="application" aria-roledescription="machine builder" aria-label="Building stage. Drag parts to move them. Keyboard: N picks a part, arrow keys move it, R turns it, plus and minus resize it, Delete removes it, Space runs the machine."></canvas>
+      <div class="cw-note" id="cw-note" hidden></div>
+    </div>
+    <div class="cw-side">
+      <p class="cw-h" id="cw-palh">Parts</p>
+      <div class="cw-pal" id="cw-pal" role="group" aria-labelledby="cw-palh"></div>
+      <p class="cw-selname" id="cw-selname"></p>
+      <div class="cw-tools" id="cw-tools" hidden>
+        <button type="button" class="cw-btn" id="cw-turn">↻ Turn</button>
+        <button type="button" class="cw-btn" id="cw-smaller" aria-label="Smaller">−</button>
+        <button type="button" class="cw-btn" id="cw-bigger" aria-label="Bigger">+</button>
+        <button type="button" class="cw-btn" id="cw-del">Remove</button>
+      </div>
+    </div>
+  </div>
+  <div class="cw-bar">
+    <button type="button" class="cw-btn cw-pri" id="cw-run">▶ Run</button>
+    <button type="button" class="cw-btn" id="cw-step">Step</button>
+    <button type="button" class="cw-btn" id="cw-reset">Reset</button>
+    <label><input type="checkbox" id="cw-slow"> Slow motion</label>
+    <button type="button" class="cw-btn" id="cw-path" aria-pressed="true">Show path</button>
+    <button type="button" class="cw-btn" id="cw-clear">Clear</button>
+    <button type="button" class="cw-btn" id="cw-share">Share</button>
+    <span class="cw-time" id="cw-time" aria-label="Time">0.0 s</span>
+  </div>
+  <div class="cw-info">
+    <div class="cw-mach" id="cw-mach"></div>
+    <div class="cw-chain" id="cw-chain" aria-live="polite"></div>
+  </div>
+  <p class="cw-sr" id="cw-live" aria-live="polite"></p>
+  <div class="cw-ov" id="cw-ov" hidden></div>
+  <noscript>This game needs JavaScript.</noscript>
+</div></div>
+<div class="cw-about" style="max-width:46rem;margin:1.4rem auto 0;line-height:1.6">
+  <h2 id="about-the-workshop">About the workshop</h2>
+<p>A chain-reaction machine does something simple in as many steps as it can. A ball rolls down a ramp, knocks over a row of dominoes, tips a lever, drops into a bucket, and at last a bell rings. Each step hands its motion to the next one.</p>
+<p>Machines like these are often named after <strong>Rube Goldberg</strong> (1883–1970), an American cartoonist born in San Francisco. He studied engineering at the University of California, then became famous for drawing silly inventions that took a dozen steps to do one small job. His name became a word for any simple task done the long way. He also won a Pulitzer Prize in 1948 for an editorial cartoon. (<a href="https://www.britannica.com/biography/Rube-Goldberg">Britannica</a>)</p>
+<h3 id="the-six-simple-machines">The six simple machines</h3>
+<p>Six devices are known as the classical simple machines. Every part in the workshop that counts as one lights up in the panel under the stage when it moves.</p>
+<ul>
+<li><strong>Inclined plane:</strong> a ramp. Rolling a ball down a slope trades height for speed. Pushing a load up a slope takes less force than lifting it, over a longer distance.</li>
+<li><strong>Lever:</strong> a bar that turns on a point called the fulcrum. A seesaw is a lever.</li>
+<li><strong>Wheel and axle:</strong> a wheel fixed to a rod so they turn together. Here it is a paddle wheel.</li>
+<li><strong>Pulley:</strong> a wheel with a rope over it. Weight on one side lifts the other.</li>
+<li><strong>Wedge:</strong> two ramps back to back. It splits or pushes things apart; here it turns a falling ball sideways.</li>
+<li><strong>Screw:</strong> a ramp wrapped around a post. As it turns, it carries the ball up, like the water screw credited to Archimedes.</li>
+</ul>
+<p>None of them gives you something for nothing: a smaller force always means a longer distance. The <a href="https://teddyrookbook.com/physics/physical-science/simple-machines/">simple machines lesson</a> shows the numbers, and <a href="https://teddyrookbook.com/physics/physical-science/levers/">Levers and Balance</a> explains why a long arm helps.</p>
+<h3 id="how-the-dragging-works">How the dragging works</h3>
+<p>When you drag a part, it doesn&rsquo;t just follow your finger. The workshop works out every spot where the part is allowed (it must fit, and dominoes, levers, springs, cups, wedges and the screw lift must stand on the floor, a level ramp or a wall) and shows the allowed spot nearest your finger. Everywhere else turns gray. Gold dots mark spots where the part would catch motion from a neighbor, and the dotted line shows where the balls would roll, worked out by running the physics a few seconds ahead. The idea of dragging only between allowed states comes from a research paper, “Declarative Dragging” by Joshua Horowitz, Andrew Blinn and Jeffrey Heer (2026); the workshop&rsquo;s code is our own.</p>
+<h3 id="the-physics">The physics</h3>
+<p>Balls fall with gravity, bounce a little and roll with a little friction. Levers, dominoes and the paddle wheel turn about their pivots, and the pulley&rsquo;s two buckets move together on one rope, so a heavier bucket sinks and lifts the other. The motion is worked out 480 times a second, and slow motion plays exactly the same steps, only slower. Real balls also spin and lose more energy, so a real machine built the same way would need some adjusting.</p>
+
+</div>
+<script src="/js/rule-drag.js?v=238678324"></script>
+<script src="/games/contraption/engine.js?v=66144561"></script>
+<script src="/games/contraption/levels.js?v=43837185"></script>
+<script src="/games/contraption/workshop.js?v=247291025"></script>
+
+
+
+<p class="pg-credit">First made for <a href="https://teddyrookbook.com/games/contraption/">Teddy Rook Book</a> · <a href="https://teddyrookbook.com/credits/">Sources and credits</a></p>
+</main>
+</body>
+</html>

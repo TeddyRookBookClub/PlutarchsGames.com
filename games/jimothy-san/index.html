@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Jimothy-san · Plutarch's Games</title>
+<meta name="description" content="A big, hunched raccoon climbs girders, rolls through possums and rides runaway mine carts. Every other level is a mine-cart ride.">
+<meta property="og:image" content="https://plutarchsgames.com/img/games/jimothy-san.jpg">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="c" aria-label="Jimothy-san game"></canvas>
+  <a class="back" href="/" aria-label="All games">‹ Plutarch's Games</a>
+  <div id="touch" hidden>
+    <div class="pad-l"><button data-k="left" aria-label="Left">◀</button><button data-k="right" aria-label="Right">▶</button><button data-k="down" class="t-down" aria-label="Down">▼</button></div>
+    <div class="pad-r"><button data-k="act" aria-label="Roll or grab">ROLL</button><button data-k="jump" class="t-jump" aria-label="Jump">JUMP</button></div>
+    <button data-k="pause" class="t-pause" aria-label="Pause">❚❚</button>
+  </div>
+</div>
+<script src="levels.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

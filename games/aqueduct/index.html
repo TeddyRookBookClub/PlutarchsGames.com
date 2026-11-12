@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aqueduct Switches · Plutarch's Games</title>
+<meta name="description" content="A Roman brain game: flip the sluice gates so every stream of water runs to its own fountain before the water gets there. Levels adapt as you play.">
+<meta property="og:title" content="Aqueduct Switches">
+<meta property="og:description" content="A Roman brain game: flip the sluice gates so every stream of water runs to its own fountain before the water gets there. Levels adapt as you play.">
+<meta property="og:image" content="https://plutarchsgames.com/img/games/aqueduct.jpg">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&display=swap">
+<link rel="stylesheet" href="/assets/base.css">
+<link rel="stylesheet" href="/assets/site.css">
+<script src="/assets/theme.js"></script>
+</head>
+<body class="game-page">
+<header class="pg-bar">
+  <a class="pg-logo" href="/"><span class="pg-mark" aria-hidden="true">Π</span><span>Plutarch's Games</span></a>
+  <nav class="pg-nav"><a href="/">All games</a><button class="pg-theme" type="button" aria-label="Switch light or dark"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg></button></nav>
+</header>
+<main class="main pg-main" id="main-content">
+<h1 class="pg-sr">Aqueduct Switches</h1>
+
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&display=swap">
+<link rel="stylesheet" href="/games/aqueduct.css?v=34723778">
+<style>
+.gbar{display:none}
+@media (max-width:900px),(max-height:560px){
+  html.game-lock,html.game-lock body{overflow:hidden !important;overscroll-behavior:none}
+  .gwrap{position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;background:var(--theme,#fff);padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+  .gbar{display:flex;flex:none;align-items:center;gap:.6rem;height:28px;padding:0 .6rem;font:600 13px system-ui,sans-serif;background:#12251b;color:#cfe0d6}
+  .gbar a{color:#f3dfa3;text-decoration:none;box-shadow:none}
+  .gbar span{flex:1;text-align:right;opacity:.7;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .gwrap>.gbox{flex:1 1 auto;min-height:0 !important;height:auto !important;width:auto !important;border:0 !important;border-radius:0 !important;margin:0 !important}
+}
+</style>
+<script>(function(){var m=matchMedia('(max-width: 900px), (max-height: 560px)');function f(){document.documentElement.classList.toggle('game-lock',m.matches)}f();if(m.addEventListener)m.addEventListener('change',f);else m.addListener(f)})();</script>
+
+<div class="gwrap"><div class="gbar"><a href="/games/brain-games/">‹ Brain games</a><span>Aqueduct Switches</span></div><div class="aq gbox" id="aq"><noscript>This game needs JavaScript.</noscript></div></div>
+<p style="font-size:.8rem;color:var(--secondary);margin-top:.5rem">Tap a gate (or Tab to it and press Enter) to flip it; Space releases the water; P pauses. One of the <a href="/games/brain-games/">brain games</a>; for printable puzzles, see <a href="https://teddyrookbook.com/puzzles/">Brain Puzzles</a>.</p>
+<script src="/games/aqueduct.js?v=216491858"></script>
+<script src="/js/keys.js?v=70461887" data-sel=".aq-gate" data-board=".aq-board"></script>
+
+    
+<p class="pg-credit">First made for <a href="https://teddyrookbook.com/games/aqueduct/">Teddy Rook Book</a> · <a href="https://teddyrookbook.com/credits/">Sources and credits</a></p>
+</main>
+</body>
+</html>

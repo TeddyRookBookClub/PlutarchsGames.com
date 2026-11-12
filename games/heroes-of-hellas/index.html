@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Heroes of Hellas · Plutarch's Games</title>
+<meta name="description" content="A real-time strategy game through the Greek myths: gather, build, advance through the ages and lead Perseus, Theseus, Jason and Heracles against monsters and kings.">
+<meta property="og:image" content="https://plutarchsgames.com/img/games/heroes-of-hellas.jpg">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="game">
+  <canvas id="world"></canvas>
+
+  <div id="hud" hidden>
+    <div id="top">
+      <a class="home" href="/" title="All games">Π</a>
+      <div class="res"><span>🍖</span><b id="r_food">0</b></div>
+      <div class="res"><span>🪵</span><b id="r_wood">0</b></div>
+      <div class="res"><span>🪙</span><b id="r_gold">0</b></div>
+      <div class="res"><span>⚡</span><b id="r_favor">0</b></div>
+      <div class="res pop"><span>👥</span><b id="r_pop">0/0</b></div>
+      <div class="age" id="r_age">Archaic Age</div>
+      <div class="sp"></div>
+      <button id="btnGods" class="tb" title="God powers">⚡<span>Gods</span></button>
+      <button id="btnCodex" class="tb" title="Codex: gods, heroes, monsters, stories and Greek words">📖</button>
+      <button id="btnIdle" class="tb" title="Next idle villager (.)">🧑‍🌾<b id="idleN">0</b></button>
+      <button id="btnArmy" class="tb" title="Select your whole army">⚔️</button>
+      <button id="btnObj" class="tb" title="Objectives">📜</button>
+      <span class="time" id="r_time">0:00</span>
+      <button id="btnMenu" class="tb" title="Menu (Esc)">☰</button>
+    </div>
+    <div id="objBox" class="open"><ul id="objectives"></ul></div>
+    <div id="toasts"></div>
+    <div id="godBox" hidden><div id="powers"></div></div>
+    <form id="chat" hidden autocomplete="off"><input id="chatIn" placeholder="Say something… (Enter to send, Esc to close)" maxlength="40" spellcheck="false"></form>
+    <div id="bottom">
+      <div class="mmwrap"><canvas id="minimap"></canvas></div>
+      <div id="selInfo"></div>
+      <div id="cmds"></div>
+    </div>
+  </div>
+
+  <div id="menu" class="screen">
+    <div class="panel wide">
+      <p class="eyebrow">Plutarch's Games</p>
+      <h1>Heroes of Hellas</h1>
+      <p class="lede">Gather and build, advance from the Archaic to the Heroic Age, and lead the heroes of Greek myth against Gorgons, minotaurs, dragons and kings.</p>
+      <h2>The stories</h2>
+      <div id="campList"></div>
+      <div class="row">
+        <button id="btnSkirmish" class="btn">⚔️ Skirmish against the computer</button>
+        <button id="btnHelp" class="btn ghost">How to play</button>
+        <button id="btnCodexM" class="btn ghost">📖 Codex of myths</button>
+        <label class="diff"><input type="checkbox" id="greekM"> Homeric Greek</label>
+        <label class="diff">Enemy <select id="diff"><option value="0.7">Gentle</option><option value="1" selected>Standard</option><option value="1.4">Fierce</option></select></label>
+      </div>
+      <p class="back"><a href="/">‹ All games</a></p>
+    </div>
+  </div>
+
+  <div id="story" class="screen" hidden>
+    <div class="panel scroll">
+      <p class="eyebrow" id="storyPlace"></p>
+      <h1 id="storyTitle"></h1>
+      <div id="storyText"></div>
+      <div class="row"><button id="storyGo" class="btn">Begin</button><button id="storyBack" class="btn ghost">Back</button></div>
+    </div>
+  </div>
+
+  <div id="end" class="screen" hidden>
+    <div class="panel scroll">
+      <h1 id="endTitle"></h1>
+      <p id="endText" class="tale"></p>
+      <p id="endStats" class="small"></p>
+      <div class="row"><button id="endNext" class="btn">Next story</button><button id="endRetry" class="btn ghost">Play again</button><button id="endMenu" class="btn ghost">Menu</button></div>
+    </div>
+  </div>
+
+  <div id="pause" class="screen" hidden>
+    <div class="panel">
+      <h1>Paused</h1>
+      <div class="row col"><button id="pResume" class="btn">Resume</button><button id="pRestart" class="btn ghost">Restart</button><button id="pQuit" class="btn ghost">Quit to menu</button></div>
+      <label class="diff"><input type="checkbox" id="greekP"> Show Homeric Greek</label>
+      <label class="diff">Game speed <select id="pSpeed"><option value="0.75">Slow</option><option value="1" selected>Normal</option><option value="1.5">Fast</option><option value="2">Very fast</option></select></label>
+    </div>
+  </div>
+
+  <div id="codex" class="screen" hidden>
+    <div class="panel scroll codexp">
+      <div class="cxhead"><h1>Codex of myths</h1><button id="codexClose" class="btn ghost">Close</button></div>
+      <div id="codexTabs"><button data-tab="gods">Gods</button><button data-tab="heroes">Heroes</button><button data-tab="monsters">Monsters</button><button data-tab="stories">Stories</button><button data-tab="words">Homeric Greek</button><button data-tab="cheats">Cheat codes</button></div>
+      <div id="codexBody"></div>
+    </div>
+  </div>
+
+  <div id="help" class="screen" hidden>
+    <div class="panel scroll">
+      <h1>How to play</h1>
+      <h3>With a mouse</h3>
+      <ul>
+        <li><b>Left-click</b> to select; <b>drag</b> to select a group; <b>double-click</b> a soldier to select every one of that kind on screen.</li>
+        <li><b>Right-click</b> to order: on the ground to move, on trees, gold or berries to gather, on an enemy to attack, on an unfinished building to help build.</li>
+        <li>Move the view with the <b>arrow keys</b> or by pushing the mouse to the edge; <b>scroll</b> to zoom; click the <b>minimap</b> to jump.</li>
+      </ul>
+      <h3>On a touch screen</h3>
+      <ul><li><b>Tap</b> your units to select them, then <b>tap</b> where they should go or what they should work on or attack. <b>Drag</b> to look around, <b>pinch</b> to zoom, and <b>press and hold, then drag</b> to select a group. The ⚔️ button selects your whole army.</li></ul>
+      <h3>Building a city</h3>
+      <ul>
+        <li>Villagers gather <b>food</b> (berries, then farms), <b>wood</b> and <b>gold</b>, and carry it to the Agora or a Storehouse. Build Storehouses near trees and gold.</li>
+        <li>Every <b>House</b> holds five people. Build them before you run out of room.</li>
+        <li>At the Agora, <b>advance</b> to the Classical Age (archers, cavalry, temples, towers) and the Heroic Age (rams; heroes grow stronger).</li>
+        <li>A <b>Temple</b> slowly earns the favour of the gods and heals units near it. Spend favour on god powers at the top of the screen.</li>
+      </ul>
+      <h3>Fighting</h3>
+      <ul>
+        <li>Hoplites beat cavalry; cavalry ride down archers and rams; archers wear down hoplites from range. Rams wreck buildings.</li>
+        <li><b>Heroes</b> deal triple damage to mythical creatures. Some monsters can only be beaten by a hero.</li>
+      </ul>
+      <h3>Keys</h3>
+      <p class="small"><kbd>Enter</kbd> opens the chat box, where cheat codes work (see the Codex) · <kbd>.</kbd> idle villager · <kbd>H</kbd> Agora · <kbd>A</kbd> attack-move · <kbd>S</kbd> stop · <kbd>Ctrl</kbd>+<kbd>1–9</kbd> make a group, <kbd>1–9</kbd> select it · <kbd>Space</kbd> jump to the last alarm · <kbd>Esc</kbd> cancel or pause. The letters on the command buttons are their hotkeys.</p>
+      <div class="row"><button id="helpBack" class="btn">Back</button></div>
+    </div>
+  </div>
+</div>
+<script src="data.js"></script>
+<script src="engine.js"></script>
+<script src="scenarios.js"></script>
+<script src="lore.js"></script>
+<script src="render.js"></script>
+<script src="ui.js"></script>
+</body>
+</html>
