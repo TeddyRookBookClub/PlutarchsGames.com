@@ -34,16 +34,17 @@ const UI = {
   toast(text, kind) { const d = document.createElement('div'); d.className = 'toast ' + (kind || ''); d.textContent = text; $('toasts').appendChild(d); while ($('toasts').children.length > 5) $('toasts').firstChild.remove(); setTimeout(() => d.classList.add('out'), 5200); setTimeout(() => d.remove(), 6000); },
   end(won, why) {
     const s = G.scen; $('endTitle').textContent = won ? 'Victory!' : 'Defeat'; $('endText').textContent = won ? s.outro : (why || '') + ' Try again: the gods are patient.';
-    $('endStats').textContent = `Time ${fmtTime(G.time)} · ${G.ents.filter(e => e.owner === 1 && e.kind === 'unit').length} people · ${AGES[P(1).age]}`;
+    $('endStats').textContent = `Time ${fmtTime(G.time)} · ${G.ents.filter(e => e.owner === 1 && e.kind === 'unit').length} people · ${ageName(1)}`;
     if (won) { SAVE.done[s.id] = true; saveProgress(); SND.fanfare(); }
     $('endNext').hidden = !won || !nextScen(s); show('end');
   },
 };
 const fmtTime = t => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
-function nextScen(s) { const i = CAMPAIGN.indexOf(s); return i >= 0 ? CAMPAIGN[i + 1] : null; }
+function nextScen(s) { const L = CAMPAIGN.filter(c => c.civ === s.civ), i = L.indexOf(s); return i >= 0 ? L[i + 1] : null; }
 function show(id) { for (const s of ['menu', 'story', 'end', 'pause', 'help']) $(s).hidden = s !== id; $('hud').hidden = !!id && id !== 'pause'; }
 function buildMenu() {
-  $('campList').innerHTML = CAMPAIGN.map((s, i) => { const open = i === 0 || SAVE.done[CAMPAIGN[i - 1].id] || SAVE.unlockAll; return `<button class="camp${open ? '' : ' locked'}" data-s="${s.id}" ${open ? '' : 'disabled'}><b>${i + 1}. ${s.title}</b><small>${open ? s.place : 'Finish the previous story to unlock'}</small>${SAVE.done[s.id] ? '<em>✓ complete</em>' : ''}</button>`; }).join('');
+  const heads = { greek: ['🏛️', 'The Greeks', 'Perseus, Theseus, Jason and Heracles'], norse: ['ᚱ', 'The Norse', 'Thor, Sigurd and Ragnarǫk'], irish: ['☘️', 'The Irish', 'Lugh, Cú Chulainn and the Táin'] };
+  $('campList').innerHTML = Object.keys(heads).map(civ => { const L = CAMPAIGN.filter(s => s.civ === civ); return `<div class="campgrp"><h3>${heads[civ][0]} ${heads[civ][1]} <small>${heads[civ][2]}</small></h3>` + L.map((s, i) => { const open = i === 0 || SAVE.done[L[i - 1].id] || SAVE.unlockAll; return `<button class="camp${open ? '' : ' locked'}" data-s="${s.id}" ${open ? '' : 'disabled'}><b>${i + 1}. ${s.title}</b><small>${open ? s.place : 'Finish the previous story to unlock'}</small>${SAVE.done[s.id] ? '<em>✓ complete</em>' : ''}</button>`; }).join('') + '</div>'; }).join('');
 }
 function openStory(s) {
   UI.pending = s; $('storyTitle').textContent = s.title; $('storyPlace').textContent = s.place || '';
@@ -51,7 +52,7 @@ function openStory(s) {
   show('story');
 }
 function begin(s) {
-  SND.init(); newGame(s, { diff: +($('diff').value || 1) });
+  SND.init(); const pickC = v => v === 'random' ? ['greek', 'norse', 'irish'][Math.floor(Math.random() * 3)] : v; newGame(s, s.skirmish ? { diff: +($('diff').value || 1), civ: pickC($('skCiv').value), foeCiv: pickC($('skFoe').value) } : { diff: +($('diff').value || 1) });
   const start = G.ents.find(e => e.owner === 1 && (e.kind === 'unit' && UNITS[e.t].hero)) || G.ents.find(e => e.owner === 1 && e.kind === 'bld') || G.ents.find(e => e.owner === 1);
   const c = center(start); centerOn(c.x, c.y); CAM.z = innerWidth < 700 ? .85 : 1;
   G.sel = []; UI.placing = null; UI.power = null; show(null); refreshPanels(true);
@@ -66,10 +67,10 @@ function refreshTop() {
   const p = P(1);
   for (const k of ['food', 'wood', 'gold', 'favor']) $('r_' + k).textContent = Math.floor(p.res[k]);
   $('r_pop').textContent = p.pop + '/' + p.cap; $('r_pop').parentNode.classList.toggle('full', p.pop >= p.cap);
-  $('r_age').textContent = AGES[p.age]; $('r_time').textContent = fmtTime(G.time);
+  $('r_age').textContent = ageName(1); $('r_time').textContent = fmtTime(G.time);
   const idle = G.ents.filter(e => e.owner === 1 && e.t === 'villager' && e.state === 'idle').length; $('idleN').textContent = idle; $('btnIdle').classList.toggle('on', idle > 0);
   const temple = G.ents.some(e => e.owner === 1 && e.t === 'temple' && e.built >= 1);
-  if (!$('godBox').hidden) $('powers').innerHTML = (temple ? '' : '<p class="tip">Build a Temple (Classical Age) to earn favour and call on the gods.</p>') + POWER_ORDER.map(k => { const w = POWERS[k], g = GODS.find(x => x.id === w.god); return `<button class="pw${UI.power === k ? ' on' : ''}" data-pw="${k}" ${temple && p.res.favor >= w.favor ? '' : 'disabled'} title="${w.info}"><span class="pi">${w.icon}</span><span class="pn"><b>${g.name}</b>${GR.on ? ` <span class="gr">${g.gr}</span>` : ''}<small>${w.name.replace(/^.*?(’|')s? ?/, '')} · ${w.favor} ⚡</small></span></button>`; }).join('');
+  if (!$('godBox').hidden) $('powers').innerHTML = (temple ? '' : `<p class="tip">Build a ${bName('temple', 1)} (${ageName(1, 1)}) to earn favour and call on the gods.</p>`) + powersOf(1).map(k => { const w = POWERS[k], g = godOf(k); return `<button class="pw${UI.power === k ? ' on' : ''}" data-pw="${k}" ${temple && p.res.favor >= w.favor ? '' : 'disabled'} title="${w.info}"><span class="pi">${w.icon}</span><span class="pn"><b>${g.name}</b>${GR.on ? ` <span class="gr">${g.gr}</span>` : ''}<small>${w.name.replace(/^.*?(’|')s? ?/, '')} · ${w.favor} ⚡</small></span></button>`; }).join('');
   $('btnGods').classList.toggle('on', temple && p.res.favor >= 25);
   $('objectives').innerHTML = G.objectives.map(o => `<li class="${o.done ? 'done' : ''} ${o.keep ? 'keep' : ''}">${o.done ? '✓' : o.keep ? '♥' : '○'} ${o.text}</li>`).join('');
 }
@@ -82,7 +83,7 @@ function refreshPanels(force) {
   const e = sel[0], own = e.owner === 1;
   if (sel.length > 1) {
     const counts = {}; for (const s of sel) counts[s.t] = (counts[s.t] || 0) + 1;
-    info.innerHTML = `<div class="multi">${Object.keys(counts).map(t => `<button class="chip" data-only="${t}">${(UNITS[t] || BUILDINGS[t]).icon}<b>${counts[t]}</b><small>${(UNITS[t] || BUILDINGS[t]).name}</small></button>`).join('')}</div>`;
+    info.innerHTML = `<div class="multi">${Object.keys(counts).map(t => `<button class="chip" data-only="${t}">${UNITS[t] ? UNITS[t].icon : bIcon(t, sel[0].owner)}<b>${counts[t]}</b><small>${UNITS[t] ? uName(t, sel[0].owner) : bName(t, sel[0].owner)}</small></button>`).join('')}</div>`;
   } else if (e.kind === 'res') {
     info.innerHTML = `<div class="one"><span class="big">${{ tree: '🌳', gold: '🪙', berry: '🫐' }[e.t]}</span><div><b>${grName(e.t === 'gold' ? 'gold' : e.t, { tree: 'Trees', gold: 'Gold mine', berry: 'Berry bushes' }[e.t])}</b><small>${Math.ceil(e.amount)} ${resType(e.t)} left</small></div></div>`;
   } else {
@@ -90,7 +91,7 @@ function refreshPanels(force) {
     if (e.kind === 'unit') { extra = `⚔ ${Math.round(damageFor(e, { kind: 'unit', t: 'hoplite', owner: 2 }) || D.atk)} · 🛡 ${D.armor} · ${D.range > 1.5 ? 'range ' + D.range : 'melee'}`; if (e.carry && e.carry.amt >= 1) extra += ` · carrying ${Math.floor(e.carry.amt)} ${e.carry.type}`; if (e.t === 'perseus') extra += e.mirror ? ' · has Athena\'s shield' : ' · needs Athena\'s shield'; }
     else if (e.built < 1) extra = 'Building… ' + Math.floor(e.built * 100) + '%'; else if (D.atk) extra = `⚔ ${D.atk} · range ${D.range}`;
     const q = e.queue && e.queue.length ? `<div class="queue">${e.queue.map((x, i) => `<button class="qi" data-cancel="${i}" title="Click to cancel">${x.unit ? UNITS[x.unit].icon : TECHS[x.tech].icon}${i === 0 ? `<i style="width:${Math.floor(x.t / x.total * 100)}%"></i>` : ''}</button>`).join('')}</div>` : '';
-    info.innerHTML = `<div class="one"><span class="big">${D.icon}</span><div><b>${grName(e.t, D.name)}</b>${own || e.owner === 0 ? '' : ` <span class="enemy">${e.owner === 3 ? 'monster' : 'enemy'}</span>`}<div class="hp"><i style="width:${Math.max(0, e.hp / e.maxHp * 100)}%"></i><span>${Math.ceil(e.hp)} / ${Math.ceil(e.maxHp)}</span></div><small>${extra}</small><small class="desc">${D.info || ''}</small></div></div>${q}`;
+    info.innerHTML = `<div class="one"><span class="big">${e.kind === 'bld' ? bIcon(e.t, e.owner) : D.icon}</span><div><b>${grName(e.t, e.kind === 'bld' ? bName(e.t, e.owner) : uName(e.t, e.owner), e.owner)}</b>${own || e.owner === 0 ? '' : ` <span class="enemy">${e.owner === 3 ? 'monster' : 'enemy'}</span>`}<div class="hp"><i style="width:${Math.max(0, e.hp / e.maxHp * 100)}%"></i><span>${Math.ceil(e.hp)} / ${Math.ceil(e.maxHp)}</span></div><small>${extra}</small><small class="desc">${(e.kind === 'bld' ? bInfo(e.t, e.owner) : D.info) || ''}</small></div></div>${q}`;
   }
   // commands
   let html = '';
@@ -98,15 +99,15 @@ function refreshPanels(force) {
   const keys = 'QWERTYUOZXCVBNM'.split(''); let ki = 0;
   if (own && sel.every(s => s.kind === 'unit')) {
     const civ = sel.some(s => s.t === 'villager');
-    if (civ) for (const b of BUILD_MENU) { const D = BUILDINGS[b], ok = (D.age || 0) <= P(1).age; html += btn(`data-build="${b}"`, D.icon, D.name, D.cost, !ok || !canAfford(1, D.cost), ok ? D.name + ': ' + D.info : D.name + ' (needs the ' + AGES[D.age] + ')', keys[ki++]); }
+    if (civ) for (const b of BUILD_MENU) { const D = BUILDINGS[b], ok = (D.age || 0) <= P(1).age, nm = bName(b, 1); html += btn(`data-build="${b}"`, bIcon(b, 1), nm, D.cost, !ok || !canAfford(1, D.cost), ok ? nm + ': ' + bInfo(b, 1) : nm + ' (needs the ' + ageName(1, D.age) + ')', keys[ki++]); }
     if (sel.some(s => !UNITS[s.t].civ)) html += btn('data-act="amove"', '🎯', 'Attack-move', null, false, 'Move, fighting anything met on the way (A)', 'A');
     if (sel.some(s => s.t === 'trojanhorse')) html += btn('data-act="horse"', '🚪', 'Open the horse', null, false, 'Let the soldiers out', 'Q');
     html += btn('data-act="stop"', '✋', 'Stop', null, false, 'Stop (S)', 'S');
   } else if (own && e.kind === 'bld' && e.built >= 1 && sel.length === 1) {
     const D = BUILDINGS[e.t];
-    for (const u of D.trains || []) { const U = UNITS[u], ok = (U.age || 0) <= P(1).age; html += btn(`data-train="${u}"`, U.icon, U.name, U.cost, !ok || !canAfford(1, U.cost), ok ? U.name + ': ' + U.info : U.name + ' (needs the ' + AGES[U.age] + ')', keys[ki++]); }
+    for (const u of trainsOf(e)) { const U = UNITS[u], ok = (U.age || 0) <= P(1).age, nm = uName(u, 1); html += btn(`data-train="${u}"`, U.icon, nm, U.cost, !ok || !canAfford(1, U.cost), ok ? nm + ': ' + U.info : nm + ' (needs the ' + ageName(1, U.age) + ')', keys[ki++]); }
     for (const t of D.techs || []) { const T = TECHS[t], p = P(1); if (p.techs.has(t) || p.researching.has(t)) continue; if (T.ageUp && T.ageUp !== p.age + 1) continue; const ok = (T.age || 0) <= p.age; html += btn(`data-tech="${t}"`, T.icon, T.name, T.cost, !ok || !canAfford(1, T.cost), T.name + ': ' + T.info, keys[ki++]); }
-    if (D.trains && D.trains.length) html += `<p class="tip">Right-click the ground (or a resource) to set a rally point.</p>`;
+    if (trainsOf(e).length) html += `<p class="tip">Right-click the ground (or a resource) to set a rally point.</p>`;
   }
   cmd.innerHTML = html;
 }
@@ -254,6 +255,7 @@ $('powers').addEventListener('click', e => { const b = e.target.closest('[data-p
 $('btnGods').addEventListener('click', () => { $('godBox').hidden = !$('godBox').hidden; refreshTop(); });
 $('btnCodex').addEventListener('click', () => openCodex()); $('btnCodexM').addEventListener('click', () => openCodex()); $('codexClose').addEventListener('click', closeCodex);
 $('codexTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) openCodex(b.dataset.tab); });
+$('codexBody').addEventListener('click', e => { const b = e.target.closest('[data-myth]'); if (b) { UI.codexMyth = b.dataset.myth; openCodex(UI.codexTab); } });
 function setGreek(on) { GR.on = on; try { localStorage.setItem('hh-greek', on ? '1' : '0'); } catch (e) { } $('greekM').checked = $('greekP').checked = on; if (G) refreshPanels(true); }
 $('greekM').addEventListener('change', e => setGreek(e.target.checked)); $('greekP').addEventListener('change', e => setGreek(e.target.checked)); setGreek(GR.on);
 $('chat').addEventListener('submit', e => { e.preventDefault(); const t = $('chatIn').value; $('chatIn').value = ''; $('chat').hidden = true; if (G && t.trim()) runCheat(t); view.focus && view.focus(); });
@@ -295,7 +297,7 @@ function frame(now) {
     CAM.x += mx * sp; CAM.y += my * sp;
     const [ax, ay] = proj(0, 0), [bx] = proj(G.n, 0), [cx] = proj(0, G.n), [, dy] = proj(G.n, G.n); CAM.x = clamp(CAM.x, cx, bx); CAM.y = clamp(CAM.y, ay, dy);
     SND.lyre(dt);
-    UI.factT = (UI.factT == null ? 120 : UI.factT) - dt * (G.speed || 1); if (UI.factT <= 0) { UI.factT = 170; UI.factI = ((UI.factI == null ? Math.floor(Math.random() * FACTS.length) : UI.factI) + 1) % FACTS.length; UI.toast('📖 Did you know? ' + FACTS[UI.factI], ''); }
+    UI.factT = (UI.factT == null ? 120 : UI.factT) - dt * (G.speed || 1); if (UI.factT <= 0) { UI.factT = 170; const FF = (MYTH[civOf(1)] || MYTH.greek).facts; UI.factI = ((UI.factI == null ? Math.floor(Math.random() * FF.length) : UI.factI) + 1) % FF.length; UI.toast('📖 Did you know? ' + FF[UI.factI], ''); }
   }
   drawWorld();
   if (G) {

@@ -111,3 +111,5 @@ h3{font:700 15px var(--display);color:var(--gold);margin:16px 0 6px}
 code{font:600 14px ui-monospace,monospace;color:#ffe9a8;background:rgba(0,0,0,.3);padding:1px 6px;border-radius:4px}
 .diff input{accent-color:var(--gold);width:16px;height:16px}
 #codex{z-index:12;background:rgba(5,12,8,.97)}
+.campgrp{margin:0 0 12px;display:flex;flex-direction:column;gap:8px}.campgrp h3{margin:10px 0 6px;font-family:Cinzel,Georgia,serif}.campgrp h3 small{font:400 13px system-ui;opacity:.7;margin-left:6px}
+.cxmyth{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}.cxmyth button{border:1px solid rgba(0,0,0,.2);background:rgba(255,255,255,.5);border-radius:999px;padding:5px 12px;font:600 14px system-ui;cursor:pointer}.cxmyth button.on{background:#004225;color:#f3ead2}

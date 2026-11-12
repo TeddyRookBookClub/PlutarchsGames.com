@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Heroes of Hellas · Plutarch's Games</title>
-<meta name="description" content="A real-time strategy game through the Greek myths: gather, build, advance through the ages and lead Perseus, Theseus, Jason and Heracles against monsters and kings.">
+<meta name="description" content="A real-time strategy game through the Greek, Norse and Irish myths: lead Perseus, Heracles, Thor, Sigurd, Lugh and Cú Chulainn against monsters, giants and kings.">
 <meta property="og:image" content="https://plutarchsgames.com/img/games/heroes-of-hellas.jpg">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,14 +48,16 @@
     <div class="panel wide">
       <p class="eyebrow">Plutarch's Games</p>
       <h1>Heroes of Hellas</h1>
-      <p class="lede">Gather and build, advance from the Archaic to the Heroic Age, and lead the heroes of Greek myth against Gorgons, minotaurs, dragons and kings.</p>
+      <p class="lede">Gather and build, advance through the ages, and lead the heroes of Greek, Norse and Irish myth against Gorgons, giants, dragons, Fomorians and kings.</p>
       <h2>The stories</h2>
       <div id="campList"></div>
       <div class="row">
         <button id="btnSkirmish" class="btn">⚔️ Skirmish against the computer</button>
+        <label class="diff">Play as <select id="skCiv"><option value="greek">Greeks</option><option value="norse">Norse</option><option value="irish">Irish</option><option value="random">Random</option></select></label>
+        <label class="diff">against <select id="skFoe"><option value="random">Random</option><option value="greek">Greeks</option><option value="norse">Norse</option><option value="irish">Irish</option></select></label>
         <button id="btnHelp" class="btn ghost">How to play</button>
         <button id="btnCodexM" class="btn ghost">📖 Codex of myths</button>
-        <label class="diff"><input type="checkbox" id="greekM"> Homeric Greek</label>
+        <label class="diff"><input type="checkbox" id="greekM"> Ancient languages</label>
         <label class="diff">Enemy <select id="diff"><option value="0.7">Gentle</option><option value="1" selected>Standard</option><option value="1.4">Fierce</option></select></label>
       </div>
       <p class="back"><a href="/">‹ All games</a></p>
@@ -84,7 +86,7 @@
     <div class="panel">
       <h1>Paused</h1>
       <div class="row col"><button id="pResume" class="btn">Resume</button><button id="pRestart" class="btn ghost">Restart</button><button id="pQuit" class="btn ghost">Quit to menu</button></div>
-      <label class="diff"><input type="checkbox" id="greekP"> Show Homeric Greek</label>
+      <label class="diff"><input type="checkbox" id="greekP"> Show ancient languages</label>
       <label class="diff">Game speed <select id="pSpeed"><option value="0.75">Slow</option><option value="1" selected>Normal</option><option value="1.5">Fast</option><option value="2">Very fast</option></select></label>
     </div>
   </div>
@@ -92,7 +94,7 @@
   <div id="codex" class="screen" hidden>
     <div class="panel scroll codexp">
       <div class="cxhead"><h1>Codex of myths</h1><button id="codexClose" class="btn ghost">Close</button></div>
-      <div id="codexTabs"><button data-tab="gods">Gods</button><button data-tab="heroes">Heroes</button><button data-tab="monsters">Monsters</button><button data-tab="stories">Stories</button><button data-tab="words">Homeric Greek</button><button data-tab="cheats">Cheat codes</button></div>
+      <div id="codexTabs"><button data-tab="gods">Gods</button><button data-tab="heroes">Heroes</button><button data-tab="monsters">Monsters</button><button data-tab="stories">Stories</button><button data-tab="words">Languages</button><button data-tab="cheats">Cheat codes</button></div>
       <div id="codexBody"></div>
     </div>
   </div>
@@ -130,6 +132,8 @@
 <script src="engine.js"></script>
 <script src="scenarios.js"></script>
 <script src="lore.js"></script>
+<script src="civs.js"></script>
+<script src="civart.js"></script>
 <script src="render.js"></script>
 <script src="ui.js"></script>
 </body>

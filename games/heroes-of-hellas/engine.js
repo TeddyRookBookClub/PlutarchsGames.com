@@ -261,7 +261,7 @@ function damageFor(a, d) {
   const A = UNITS[a.t] || BUILDINGS[a.t], Dd = D_(d), pa = P(a.owner);
   let atk = A.atk || 0;
   if (a.kind === 'unit') {
-    if ((a.t === 'hoplite' || a.t === 'cavalry') && pa.techs.has('spears')) atk += 2;
+    if (!A.hero && !A.myth && (A.type === 'infantry' || A.type === 'cavalry') && pa.techs.has('spears')) atk += 2;
     if (A.missile === 'arrow' && pa.techs.has('fletching')) atk += 1;
     if (A.hero && pa.age >= 2) atk *= 1.25;
   } else if (pa.techs.has('fletching')) atk += 1;
@@ -310,7 +310,7 @@ function stepMissiles(dt) {
     const d = dist(m.x, m.y, m.tx, m.ty), step = m.speed * dt; m.t += dt;
     if (d <= step) {
       G.missiles.splice(i, 1); const src = G.byId.get(m.from) || { kind: 'unit', t: 'archer', owner: m.owner, id: m.from };
-      if (m.kind === 'gaze') { if (tgt && !tgt.dead) { if (tgt.kind === 'unit' && !(UNITS[tgt.t].hero && tgt.mirror) && !UNITS[tgt.t].myth) petrify(tgt); else hit(src, tgt, m.dmg); } }
+      if (m.kind === 'gaze') { if (tgt && !tgt.dead) { if (tgt.kind === 'unit' && !(UNITS[tgt.t].hero && (tgt.mirror || UNITS[tgt.t].gazeImmune)) && !UNITS[tgt.t].myth) { if (src && UNITS[src.t] && UNITS[src.t].burnGaze) { fxBurst(tgt.x, tgt.y, '#ff6a1a', 14); if (tgt.owner === 1) say(uName(tgt.t, 1) + ' was burned up by the Evil Eye!', 'warn'); kill(tgt, src); } else petrify(tgt); } else hit(src, tgt, m.dmg); } }
       else if (m.splash) { for (const e of G.ents.slice()) if ((e.kind === 'unit' || e.kind === 'bld') && e.owner !== m.owner && e.owner !== 0 && edgeDist({ x: m.tx, y: m.ty }, e) < m.splash) hit(src, e, m.dmg * (e === tgt ? 1 : .6)); G.fx.push({ k: 'boom', x: m.tx, y: m.ty, t: 0, life: .5, col: '#ff8a2a' }); }
       else if (tgt && !tgt.dead) hit(src, tgt, m.dmg);
       continue;
@@ -483,7 +483,7 @@ function stepBld(b, dt) {
       recount();
     } else {
       const T = TECHS[q.tech]; p.researching.delete(q.tech); p.techs.add(q.tech);
-      if (T.ageUp) { p.age = T.ageUp; if (b.owner === 1) { say('Welcome to the ' + AGES[p.age] + '!', 'gold'); SND && SND.fanfare(); } if (p.age === 2) for (const u of G.ents) if (u.kind === 'unit' && u.owner === b.owner && UNITS[u.t].hero) { u.maxHp *= 1.25; u.hp *= 1.25; } }
+      if (T.ageUp) { p.age = T.ageUp; if (b.owner === 1) { say('Welcome to the ' + ageName(b.owner, p.age) + '!', 'gold'); SND && SND.fanfare(); } if (p.age === 2) for (const u of G.ents) if (u.kind === 'unit' && u.owner === b.owner && UNITS[u.t].hero) { u.maxHp *= 1.25; u.hp *= 1.25; } }
       else if (b.owner === 1) say(T.name + ' researched.');
     }
   }
@@ -512,11 +512,11 @@ function updateFog(force) {
 function usePower(pid, id, x, y) {
   const W = POWERS[id], p = P(pid); if (p.res.favor < W.favor) return false;
   if (pid === 1 && !G.ents.some(e => e.kind === 'bld' && e.owner === 1 && e.t === 'temple' && e.built >= 1)) { say('Build a temple first.', 'warn'); return false; }
-  p.res.favor -= W.favor;
+  p.res.favor -= W.favor; const pid0 = pid; id = W.as || id;
   if (id === 'bolt') { G.fx.push({ k: 'bolt', x, y, t: 0, life: .7 }); SND && SND.thunder(); for (const e of G.ents.slice()) if ((e.kind === 'unit' || e.kind === 'bld') && e.owner !== pid && e.owner !== 0 && edgeDist({ x, y }, e) < W.radius) hit({ kind: 'unit', t: 'perseus', owner: pid, id: -1 }, e, W.dmg * (e.kind === 'bld' ? .5 : 1)); }
-  if (id === 'aegis') { G.aegisT = 12; say('Athena\'s aegis shields your army!', 'gold'); SND && SND.fanfare(); }
-  if (id === 'harvest') { p.res.food += 250; say('Demeter blesses the harvest: +250 food.', 'gold'); }
-  if (!['bolt', 'aegis', 'harvest', 'wave'].includes(id)) { extraPower(pid, id, x, y); return true; }
+  if (id === 'aegis') { G.aegisT = 12; say(W.name + ' shields your army!', 'gold'); SND && SND.fanfare(); }
+  if (id === 'harvest') { p.res.food += 250; say(W.name + ': +250 food.', 'gold'); }
+  if (!['bolt', 'aegis', 'harvest', 'wave'].includes(id)) { extraPower(pid, id, x, y, W); return true; }
   if (id === 'wave') { G.fx.push({ k: 'wave', x, y, t: 0, life: 1.2 }); SND && SND.wave(); for (const e of G.ents.slice()) if (e.kind === 'unit' && e.owner !== pid && e.owner !== 0 && dist(e.x, e.y, x, y) < W.radius) { const a = Math.atan2(e.y - y, e.x - x); const nx = e.x + Math.cos(a) * 2.5, ny = e.y + Math.sin(a) * 2.5; if (!G.block[Math.floor(ny) * G.n + Math.floor(nx)]) { e.x = nx; e.y = ny; } hit({ kind: 'unit', t: 'perseus', owner: pid, id: -1 }, e, W.dmg); } }
   return true;
 }
@@ -536,7 +536,9 @@ function stepAI(dt) {
   if (sk) {
     // split the villagers roughly half on food, a third on wood, the rest on gold
     const on = { food: 0, wood: 0, gold: 0 }; for (const v of vills) { const k = v.state === 'farm' ? 'food' : v.resT ? resType(v.resT) : null; if (k) on[k]++; }
-    const share = { food: .48, wood: .32, gold: .2 };
+    // lean toward whatever the city is shortest of
+    const R0 = me.res, wt = { food: 1.7 / (R0.food + 150), wood: 1 / (R0.wood + 150), gold: .8 / (R0.gold + 150) }, ws = wt.food + wt.wood + wt.gold;
+    const share = { food: Math.max(.35, wt.food / ws), wood: Math.max(.2, wt.wood / ws), gold: Math.max(.12, wt.gold / ws) };
     for (const v of vills) {
       if (v.state !== 'idle') continue;
       const need = Object.keys(share).sort((a, b) => on[a] / vills.length - share[a] - (on[b] / vills.length - share[b]))[0];
@@ -554,7 +556,9 @@ function stepAI(dt) {
     const count = t => blds.filter(b => b.t === t).length;
     if (count('barracks') < 1 && G.time > 60) want.push('barracks');
     if (count('storehouse') < 1 && G.time > 90) want.push('storehouse');
-    if (count('farm') < Math.min(14, Math.ceil(vills.length * .45)) && !nearestRes(agora ? agora.x : 0, agora ? agora.y : 0, 'berry', 14)) want.push('farm');
+    if (count('farm') < Math.min(14, Math.ceil(vills.length * .45)) && (vills.length > 10 || !nearestRes(agora ? agora.x : 0, agora ? agora.y : 0, 'berry', 14))) { if (me.res.food < 300) want.unshift('farm'); else want.push('farm'); }
+    // move a couple of workers off whatever is piling up
+    for (const k of ['wood', 'gold']) if (me.res[k] > 700 && me.res.food < 300) { let n = 2; for (const v of vills) if (n > 0 && v.resT && resType(v.resT) === k && v.state === 'gather') { v.state = 'idle'; v.resT = null; n--; } }
     if (me.age >= 1 && count('range') < 1) want.push('range');
     if (me.age >= 1 && count('stable') < 1 && G.time > 420) want.push('stable');
     if (me.age >= 1 && count('temple') < 1 && G.time > 500) want.push('temple');
@@ -571,8 +575,8 @@ function stepAI(dt) {
   const cap = sk ? 120 : Math.min(60, 10 + Math.floor(G.time / 30)) * diff;
   if (army.length < cap) for (const b of blds) {
     if (b.built < 1 || b.queue.length >= 2) continue;
-    const opts = (BUILDINGS[b.t].trains || []).filter(t => t !== 'villager' && (UNITS[t].age || 0) <= me.age);
-    if (b.t === 'palace' || b.t === 'ruin') opts.push('hoplite');
+    const opts = trainsOf(b).filter(t => t !== 'villager' && (UNITS[t].age || 0) <= me.age && !(UNITS[t].cost && UNITS[t].cost.favor > me.res.favor));
+    if ((b.t === 'palace' || b.t === 'ruin') && !opts.length) opts.push(CV(2).inf || 'hoplite');
     if (opts.length) { const t = opts[Math.floor(G.R() * opts.length)]; if (!sk && me.pop >= me.cap) me.cap += 5; queueTrain(b, t); }
   }
   // defend: anything of ours under attack recently pulls nearby soldiers

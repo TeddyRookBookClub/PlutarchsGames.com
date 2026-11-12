@@ -6,7 +6,7 @@ window.PG_GAMES = [
   { slug: 'jimothy-san', title: 'Jimothy-san', cat: 'action', new: true, big: true,
     blurb: 'A big, hunched raccoon rolls, slaps and barrel-throws across two islands: 16 levels, two bosses, and every other level a runaway mine-cart ride.' },
   { slug: 'heroes-of-hellas', title: 'Heroes of Hellas', cat: 'strategy', new: true, big: true,
-    blurb: 'An Age-of-Empires-style strategy game through the Greek myths: Perseus, Theseus, Jason and Heracles, fourteen god powers, a Codex of the gods, optional Homeric Greek, and cheat codes.' },
+    blurb: 'An Age-of-Empires-style strategy game through Greek, Norse and Irish myth: three peoples with their own units, gods and campaigns, from Perseus and Heracles to Thor, Ragnarǫk, Lugh and Cú Chulainn. Optional Homeric Greek, Old Norse and Old Irish.' },
   { slug: 'polis', title: 'Polis', cat: 'strategy', new: true, big: true,
     blurb: 'A Caesar III-style city builder: houses grow from tents to villas as you bring water, food, temples, pottery, theatres and wine. Six cities from Massalia to Alexandria, five gods, and the Parthenon.' },
   { slug: 'trireme', title: 'Trireme Trader', cat: 'strategy', new: true,

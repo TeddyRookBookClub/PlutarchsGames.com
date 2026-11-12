@@ -169,6 +169,7 @@ function drawBld(e, ghost) {
     ctx.beginPath(); ctx.moveTo(ff.l[0], ff.l[1] - h); ctx.lineTo(ff.b[0], ff.b[1] - h); ctx.lineTo(ff.r[0], ff.r[1] - h); ctx.stroke();
     ctx.restore(); return;
   }
+  if (civBld(e, ghost)) { if (!ghost && e.hp < e.maxHp * .5 && e.built >= 1) { const c = proj(x + s / 2, y + s / 2); ctx.globalAlpha = .5; ell(c[0], c[1] - 30 - (T * 10) % 20, 8, 6, '#555'); ctx.globalAlpha = 1; } ctx.restore(); return; }
   switch (e.t) {
     case 'agora': {
       box(x, y, s, 6, '#d9cfb3', '#e6dcc0');
@@ -294,6 +295,7 @@ function drawUnit(e, alpha) {
   ell(px, py, 9 * big, 4 * big, 'rgba(0,0,0,.22)');
   if (D.hero && e.owner === 1) { ctx.globalAlpha = (alpha == null ? 1 : alpha) * (.35 + Math.sin(T * 3) * .15); ell(px, py, 13, 6, '#ffe066'); ctx.globalAlpha = alpha == null ? 1 : alpha; }
   const X = px + f * lunge + (e.dance ? Math.sin(T * 12) * 3 : 0);
+  if (civUnit(e, X, py, walk, f, lunge, C, T)) { ctx.restore(); return; }
   switch (e.t) {
     case 'villager': {
       person(X, py, { tunic: e.carry && e.carry.amt > 0 ? '#c9b48a' : '#d8c8a0', sash: C.main, walk, face: f, hair: '#3a2a1a' });
