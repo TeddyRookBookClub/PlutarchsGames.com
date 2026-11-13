@@ -82,7 +82,7 @@ a{color:var(--brg-2)}
 .shelf{margin:0 0 34px}
 .shelf h2{display:flex;align-items:baseline;gap:10px;margin:0 0 14px;font:700 1.25rem var(--display);color:var(--primary)}
 .shelf h2 small{font:500 .9rem var(--ui);color:var(--secondary)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(440px,100%),1fr));gap:18px}
 .tile{position:relative;display:flex;flex-direction:column;border-radius:14px;overflow:hidden;background:var(--entry);
   border:1.5px solid var(--border);color:var(--primary)!important;text-decoration:none!important;box-shadow:var(--card-shadow);
   transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
@@ -98,7 +98,7 @@ a{color:var(--brg-2)}
 .badge{font:800 .7rem/1 var(--ui);letter-spacing:.12em;text-transform:uppercase;padding:6px 9px;border-radius:6px;
   background:var(--gold);color:#1f1806;box-shadow:0 2px 8px rgba(0,0,0,.25)}
 .tile .badge{position:absolute;left:10px;top:10px;z-index:2}
-.tile.big{grid-column:span 2}
+.tile.big{grid-column:auto}
 @media (max-width:560px){.tile.big{grid-column:auto}.search{max-width:none;margin-left:0}}
 .empty{color:var(--secondary);padding:20px 0}
 

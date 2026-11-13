@@ -15,6 +15,7 @@
 .c.br{border-right:2px solid var(--ink)}.c.bb{border-bottom:2px solid var(--ink)}
 .c.given{color:var(--ink);font-weight:600}
 .c.area{background:color-mix(in srgb,var(--g) 9%,var(--panel))}
+.c.block{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--ink) 13%,var(--panel)) 0 3px,color-mix(in srgb,var(--ink) 7%,var(--panel)) 3px 6px)}.c.block.area{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--ink) 16%,var(--panel)) 0 3px,color-mix(in srgb,var(--g) 14%,var(--panel)) 3px 6px)}
 .c.same{background:color-mix(in srgb,var(--g) 24%,var(--panel))}
 .c.sel{background:color-mix(in srgb,var(--gold) 55%,var(--panel))}
 .c.wrong{color:#d23a2a}.c.dup:not(.given){color:#d23a2a}

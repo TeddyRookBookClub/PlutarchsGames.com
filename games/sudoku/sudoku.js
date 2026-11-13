@@ -7,12 +7,12 @@
   var E = W.SudokuEngine, b = W.SUDOKU_BOX || 3, G = E.Geometry(b), N = G.N, C = G.C, BIG = b > 3;
   var KEY = 'pg-sudoku-' + N, $ = Kit.$, $$ = Kit.$$;
   var DIFFS = BIG ? ['Easy', 'Medium', 'Hard'] : ['Easy', 'Medium', 'Hard', 'Expert', 'Master', 'Extreme'];
-  var SYMS = BIG ? 'ABCDEFGHIJKLMNOPQRSTUVWXY' : '123456789';
-  var settings = Object.assign({ limit: true, autocheck: true, hlArea: true, hlSame: true, hlDup: true, autoNotes: true, timer: true, sound: true, numbers: false, digitFirst: false }, Kit.store.get(KEY + '-settings', {}));
+  var SYMS = BIG ? 'ABCDEFGHIJKLMNOPRSTUVWXYZ' : '123456789'; // 25 letters: Q is the one left out
+  var settings = Object.assign({ limit: true, autocheck: true, hlArea: true, hlSame: true, hlDup: true, hlBlock: true, autoNotes: true, timer: true, sound: true, numbers: false, digitFirst: false }, Kit.store.get(KEY + '-settings', {}));
   var stats = Kit.store.get(KEY + '-stats', {});
   var daily = Kit.store.get(KEY + '-daily', {});
   var S = null; // the game in progress
-  var sel = -1, notesMode = false, worker = null, armed = 0;
+  var sel = -1, focus = 0, notesMode = false, worker = null, armed = 0;
 
   function sym(d) { return settings.numbers && BIG ? String(d) : SYMS[d - 1]; }
   function saveSettings() { Kit.store.set(KEY + '-settings', settings); }
@@ -137,22 +137,26 @@
   function render() {
     if (!S) return;
     var sv = sel >= 0 ? S.g[sel] : 0, counts = new Array(N + 1).fill(0);
+    // the letter in focus: the one picked on the keypad, or the one in the selected cell
+    var fd = sv || focus, bR = {}, bC = {}, bB = {};
+    if (fd && settings.hlBlock) for (var q = 0; q < C; q++) if (S.g[q] === fd && (S.g[q] === S.sol[q] || !settings.autocheck)) { bR[G.row(q)] = bC[G.col(q)] = bB[G.box(q)] = 1; }
     for (var i = 0; i < C; i++) if (S.g[i] && (S.g[i] === S.sol[i] || !settings.autocheck)) counts[S.g[i]]++;
     for (i = 0; i < C; i++) {
-      var el = cells[i], v = S.g[i], cls = el.className.replace(/ (sel|area|same|given|wrong|dup|note|right)\b/g, '');
+      var el = cells[i], v = S.g[i], cls = el.className.replace(/ (sel|area|same|block|given|wrong|dup|note|right)\b/g, '');
       if (S.given[i]) cls += ' given';
       if (i === sel) cls += ' sel';
       else if (sel >= 0 && settings.hlArea && (G.row(i) === G.row(sel) || G.col(i) === G.col(sel) || G.box(i) === G.box(sel))) cls += ' area';
-      if (v && sv && v === sv && settings.hlSame && i !== sel) cls += ' same';
+      if (v && fd && v === fd && settings.hlSame && i !== sel) cls += ' same';
+      else if (fd && settings.hlBlock && i !== sel && (bR[G.row(i)] || bC[G.col(i)] || bB[G.box(i)])) cls += ' block';
       if (v && !S.given[i]) { if (settings.autocheck && v !== S.sol[i]) cls += ' wrong'; else cls += ' right'; }
       if (v && settings.hlDup && !S.given[i] && conflicts(i, v)) cls += ' dup';
       if (!v && S.notes[i]) cls += ' note';
       el.className = cls;
       if (v) el.textContent = sym(v);
-      else if (S.notes[i]) { var h = ''; for (var d = 1; d <= N; d++) var on = S.notes[i] & (1 << (d - 1)); h += '<i' + (on && sv === d && settings.hlSame ? ' class="m"' : '') + '>' + (on ? sym(d) : '') + '</i>'; el.innerHTML = '<span class="nt">' + h + '</span>'; }
+      else if (S.notes[i]) { var h = ''; for (var d = 1; d <= N; d++) { var on = S.notes[i] & (1 << (d - 1)); h += '<i' + (on && fd === d && settings.hlSame ? ' class="m"' : '') + '>' + (on ? sym(d) : '') + '</i>'; } el.innerHTML = '<span class="nt">' + h + '</span>'; }
       else el.textContent = '';
     }
-    $$('#sd-pad button').forEach(function (bt) { var d = +bt.dataset.n, left = N - counts[d]; bt.querySelector('small').textContent = left; bt.classList.toggle('done', left <= 0); bt.classList.toggle('cur', d === sv); });
+    $$('#sd-pad button').forEach(function (bt) { var d = +bt.dataset.n, left = N - counts[d]; bt.querySelector('small').textContent = left; bt.classList.toggle('done', left <= 0); bt.classList.toggle('cur', d === fd); });
     $$('#sd-diff button').forEach(function (bt) { bt.classList.toggle('on', +bt.dataset.d === S.diff); });
     $('#sd-level').innerHTML = (S.daily ? '📅 ' + S.daily + ' · ' : '') + '<b>' + DIFFS[S.diff] + '</b>';
     $('#sd-mist').innerHTML = 'Mistakes: <b>' + S.mistakes + (settings.limit && !S.second ? '/3' : '') + '</b>';
@@ -182,13 +186,13 @@
     $$('.dcal [data-day]').forEach(function (bt) { bt.onclick = function () { play(bt.dataset.day); }; });
   }
   function showSettings() {
-    var opts = [['limit', 'Mistakes limit', 'The game ends after three mistakes.'], ['autocheck', 'Check for mistakes', 'Wrong numbers turn red as soon as you enter them.'], ['hlDup', 'Highlight duplicates', 'Show numbers that repeat in a row, column or box.'], ['hlArea', 'Highlight areas', 'Shade the row, column and box of the selected cell.'], ['hlSame', 'Highlight identical numbers', ''], ['autoNotes', 'Auto-remove notes', 'Placing a number clears it from notes in the same row, column and box.'], ['timer', 'Show the timer', ''], ['sound', 'Sound', ''], ['digitFirst', 'Number first', 'Tap a number, then tap cells to fill them (good on phones).']].concat(BIG ? [['numbers', 'Use numbers 1–25 instead of letters A–Y', '']] : []);
+    var opts = [['limit', 'Mistakes limit', 'The game ends after three mistakes.'], ['autocheck', 'Check for mistakes', 'Wrong numbers turn red as soon as you enter them.'], ['hlDup', 'Highlight duplicates', 'Show numbers that repeat in a row, column or box.'], ['hlArea', 'Highlight areas', 'Shade the row, column and box of the selected cell.'], ['hlSame', 'Highlight identical numbers', ''], ['hlBlock', 'Show where a ' + (BIG ? 'letter' : 'number') + ' can\u2019t go', 'Tap a ' + (BIG ? 'letter' : 'number') + ' to shade every row, column and box that already has it.'], ['autoNotes', 'Auto-remove notes', 'Placing a number clears it from notes in the same row, column and box.'], ['timer', 'Show the timer', ''], ['sound', 'Sound', ''], ['digitFirst', 'Number first', 'Tap a number, then tap cells to fill them (good on phones).']].concat(BIG ? [['numbers', 'Use numbers 1–25 instead of the letters A–Z (no Q)', '']] : []);
     Kit.modal('<h2>Settings</h2>' + opts.map(function (o) { return '<label class="sw"><input type="checkbox" data-s="' + o[0] + '"' + (settings[o[0]] ? ' checked' : '') + '><span><b>' + o[1] + '</b>' + (o[2] ? '<small>' + o[2] + '</small>' : '') + '</span></label>'; }).join('') + '<div class="krow"><button class="btn gold" data-close>Done</button></div>');
     $$('[data-s]').forEach(function (cb) { cb.onchange = function () { settings[cb.dataset.s] = cb.checked; if (cb.dataset.s === 'sound') Kit.sfx.on = cb.checked; saveSettings(); if (cb.dataset.s === 'numbers') $$('#sd-pad button').forEach(function (bt) { bt.querySelector('b').textContent = sym(+bt.dataset.n); }); render(); }; });
   }
   function showHelp() {
-    Kit.modal('<h2>How to play</h2><p>Fill the grid so every row, every column and every ' + b + '×' + b + ' box contains ' + (BIG ? 'each of the letters A to Y (or the numbers 1 to 25) exactly once.' : 'the digits 1 to 9 exactly once.') + '</p>' +
-      '<ul><li><b>Select</b> a cell, then tap a ' + (BIG ? 'letter' : 'number') + ' below or type it. Arrow keys move.</li><li><b>Notes</b> (' + (BIG ? 'Shift+N' : 'N') + ') jot down possibilities; <b>Auto-notes</b> fills in every candidate for you.</li><li><b>Hint</b> (' + (BIG ? 'Shift+H' : 'H') + ') fills the selected cell, or the easiest one.</li><li><b>Undo</b> (Ctrl+Z), <b>Erase</b> (Delete), <b>Pause</b> (P).</li><li>The small number under each key shows how many are still to place.</li></ul>' +
+    Kit.modal('<h2>How to play</h2><p>Fill the grid so every row, every column and every ' + b + '×' + b + ' box contains ' + (BIG ? 'each of 25 letters, A to Z without Q (or the numbers 1 to 25), exactly once.' : 'the digits 1 to 9 exactly once.') + '</p>' +
+      '<ul><li><b>Select</b> a cell, then tap a ' + (BIG ? 'letter' : 'number') + ' below or type it. Arrow keys move.</li><li><b>Notes</b> (' + (BIG ? 'Shift+N' : 'N') + ') jot down possibilities; <b>Auto-notes</b> fills in every candidate for you.</li><li><b>Hint</b> (' + (BIG ? 'Shift+H' : 'H') + ') fills the selected cell, or the easiest one.</li><li><b>Undo</b> (Ctrl+Z), <b>Erase</b> (Delete), <b>Pause</b> (P).</li><li>Tap a ' + (BIG ? 'letter' : 'number') + ' on the keypad with no empty cell selected to see where it already is and shade every row, column and box it can\u2019t go in. Esc clears it.</li><li>The small number under each key shows how many are still to place.</li></ul>' +
       (BIG ? '<p class="mute">Super Sudoku has 625 cells: a long, satisfying game. Your progress is saved in this browser, so you can come back to it.</p>' : '') + '<div class="krow"><button class="btn gold" data-close>Got it</button></div>');
   }
 
@@ -196,9 +200,9 @@
   boardEl.addEventListener('click', function (e) {
     var c = e.target.closest('.c'); if (!c || !S) return; var i = +c.dataset.i;
     if (settings.digitFirst && S.pick) { sel = i; input(S.pick); return; }
-    sel = i; render();
+    sel = i; if (S.g[i]) focus = S.g[i]; render();
   });
-  $('#sd-pad').addEventListener('click', function (e) { var bt = e.target.closest('[data-n]'); if (!bt) return; var d = +bt.dataset.n; if (settings.digitFirst) { S.pick = S.pick === d ? 0 : d; $$('#sd-pad button').forEach(function (q) { q.classList.toggle('pick', +q.dataset.n === S.pick); }); if (sel >= 0 && !S.g[sel]) input(d); return; } input(d); });
+  $('#sd-pad').addEventListener('click', function (e) { var bt = e.target.closest('[data-n]'); if (!bt) return; var d = +bt.dataset.n; focus = d; if (settings.digitFirst) { S.pick = S.pick === d ? 0 : d; $$('#sd-pad button').forEach(function (q) { q.classList.toggle('pick', +q.dataset.n === S.pick); }); if (sel >= 0 && !S.g[sel]) input(d); render(); return; } if (sel >= 0 && !S.g[sel]) input(d); else if (sel >= 0 && !S.given[sel] && S.g[sel] !== S.sol[sel]) input(d); else { sel = -1; render(); } });
   $('#t-undo').onclick = undo; $('#t-erase').onclick = erase; $('#t-hint').onclick = hint; $('#t-auto').onclick = autoNotes;
   $('#t-notes').onclick = function () { notesMode = !notesMode; render(); };
   $('#sd-new').onclick = function () { newGame(S ? S.diff : 0); };
@@ -215,10 +219,11 @@
     if (paused()) return;
     var mv = { ArrowUp: -N, ArrowDown: N, ArrowLeft: -1, ArrowRight: 1 }[k];
     if (mv) { e.preventDefault(); if (sel < 0) sel = 0; else { var r = G.row(sel), c = G.col(sel); if (k === 'ArrowUp') r = (r + N - 1) % N; if (k === 'ArrowDown') r = (r + 1) % N; if (k === 'ArrowLeft') c = (c + N - 1) % N; if (k === 'ArrowRight') c = (c + 1) % N; sel = r * N + c; } render(); return; }
+    if (k === 'Escape') { focus = 0; sel = -1; render(); return; }
     if (k === 'Backspace' || k === 'Delete' || k === '0') { erase(); return; }
     if (!BIG && /^[1-9]$/.test(k)) { input(+k); return; }
     if (BIG && e.shiftKey && (k === 'N' || k === 'H')) { if (k === 'N') { notesMode = !notesMode; render(); } else hint(); return; }
-    if (BIG && !settings.numbers && /^[a-yA-Y]$/.test(k)) { input(k.toUpperCase().charCodeAt(0) - 64); return; }
+    if (BIG && !settings.numbers && /^[a-zA-Z]$/.test(k) && SYMS.indexOf(k.toUpperCase()) >= 0) { input(SYMS.indexOf(k.toUpperCase()) + 1); return; }
     if (BIG && settings.numbers && /^[0-9]$/.test(k)) { // two-digit numbers: type 1 then 2 quickly for 12
       clearTimeout(numT); numBuf += k; var v = +numBuf;
       if (numBuf.length >= 2 || v > 2) { numBuf = ''; if (v >= 1 && v <= 25) input(v); } else numT = setTimeout(function () { var w = +numBuf; numBuf = ''; if (w >= 1) input(w); }, 600);
