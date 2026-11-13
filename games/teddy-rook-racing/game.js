@@ -1662,9 +1662,12 @@ function playerInput() {
   const gp = navigator.getGamepads ? Array.from(navigator.getGamepads()).find(p => p) : null;
   if (gp) {
     const ax = gp.axes[0] || 0; if (Math.abs(ax) > .15) steer = ax; const b = i => gp.buttons[i] ? gp.buttons[i].value : 0;
-    // A or ZR go, B or ZL brake, L or R drift, X boost, Y item (in padPoll)
-    throttle = Math.max(throttle, b(7), b(1)); brake = Math.max(brake, b(6), b(0)); drift = drift || b(5) > .5 || b(4) > .5; boost = boost || b(3) > .5;
+    // Mario Kart style: A go, B brake, X boost, Y item (in padPoll).
+    // Drift: hold L or ZL while steering left, or R or ZR while steering right; let go to cash in the boost.
+    throttle = Math.max(throttle, b(1)); brake = Math.max(brake, b(0)); boost = boost || b(3) > .5;
+    const dl = b(4) > .5 || b(6) > .5, dr = b(5) > .5 || b(7) > .5, cur = G.player ? G.player.drift : 0;
     if (b(14)) steer = -1; if (b(15)) steer = 1;
+    drift = drift || (cur < 0 ? dl : cur > 0 ? dr : (steer < -.4 && dl) || (steer > .4 && dr));
   }
   G.lookBack = !!KEYS.KeyB;
   return G.inp = touchInput({ steer, throttle, brake, drift, boost });
@@ -1890,7 +1893,7 @@ function padPoll() {
 let padHinted = false;
 function frame(now) {
   requestAnimationFrame(frame); padPoll();
-  if (!padHinted && navigator.getGamepads && Array.from(navigator.getGamepads()).some(p => p)) { padHinted = true; toast('🎮 A or ZR go · B or ZL brake · stick steers · L/R drift · X boost · Y item · + pause · − camera', '', 7000); }
+  if (!padHinted && navigator.getGamepads && Array.from(navigator.getGamepads()).some(p => p)) { padHinted = true; toast('🎮 A go · B brake · stick steers · drift: hold L/ZL steering left or R/ZR steering right · X boost · Y item · + pause · − camera', '', 7000); }
   const dt = Math.min((now - lastT) / 1000 || 0, .05); lastT = now;
   if (!G.T || !G.W) return;
   const paused = G.state === 'paused'; if (!paused) G.t += dt;
