@@ -615,5 +615,5 @@
     if (G) { draw(); if (G.stickPos) { var r = cv.getBoundingClientRect(), sp = G.stickPos; c.strokeStyle = 'rgba(255,255,255,.5)'; c.lineWidth = 2; c.beginPath(); c.arc(sp.x - r.left, sp.y - r.top, 55, 0, 7); c.stroke(); c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.arc(sp.x - r.left + sp.dx, sp.y - r.top + sp.dy, 22, 0, 7); c.fill(); } }
   }
   fit(); title(); W.requestAnimationFrame(frame);
-  W.__city = { get G() { return G; }, start: function (cty) { startCity(cty); closeOv(); }, mission: function (j) { startMission(j); }, keys: keys, setKeys: function (o) { for (var k in o) keys[k] = o[k]; }, step: function (s) { for (var t = 0; t < s; t += 1 / 90) step(1 / 90); }, hold: function (v) { paused = v; }, action: action, spot: spot, bfs: bfs, enter: function (car) { enterCar(car); } };
+  W.__city = { get G() { return G; }, start: function (cty) { startCity(cty); closeOv(); }, mission: function (j) { startMission(j); }, keys: keys, setKeys: function (o) { for (var k in o) keys[k] = o[k]; }, step: function (s) { for (var t = 0; t < s; t += 1 / 90) step(1 / 90); }, hold: function (v) { paused = v; }, action: action, spot: spot, bfs: bfs, enter: function (car) { enterCar(car); }, stick: function (x, y, on) { stick.x = x; stick.y = y; stick.on = on; } };
 })(window, document);

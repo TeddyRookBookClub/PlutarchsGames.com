@@ -510,6 +510,7 @@
     });
   }
   function die() {
+    if (W.__tb.god) return;
     state = 'dying'; dyingT = 1.6; S.lives--;
     flash(X.caught[0], X.caught[1], 'red');
   }
@@ -523,7 +524,9 @@
     flash(w[0], w[1], 'word');
     renderHud();
   }
-  W.__tb = { st: function () { return S; }, win: function () { dayWon(); }, coins: function () { return totalCoins; } };
+  W.__tb = { st: function () { return S; }, win: function () { dayWon(); }, coins: function () { return totalCoins; },
+    get P() { return player; }, get ghosts() { return ghosts; }, get coinMap() { return coins; }, get state() { return state; }, get mode() { return gameMode; }, get H() { return H; },
+    open: function (x, y) { return open(x, y); }, get CW() { return CW; }, get CH() { return CH; }, classic: function () { startClassic(); }, hunt: function () { startHunt(); }, god: false };
   function dayWon() {
     state = 'card';
     if (gameMode === 'camp') { campaignAfterDay(); return; }
@@ -1021,7 +1024,7 @@
       for (var k = 0; k < 3; k++) {
         var rr = HT * (0.32 + r() * 0.22), ox = (r() - 0.5) * HT * 0.6, oy = (r() - 0.5) * HT * 0.6;
         var g = c.createRadialGradient(cx + ox - rr * 0.3, cy + oy - rr * 0.3, rr * 0.1, cx + ox, cy + oy, rr);
-        var dark = r() < 0.5 + dayN * .2; g.addColorStop(0, dark ? '#3f6b3a' : '#4d7a3f'); g.addColorStop(1, dark ? '#1c3620' : '#244426');
+        var dark = r() < 0.5; g.addColorStop(0, dark ? '#3f6b3a' : '#4d7a3f'); g.addColorStop(1, dark ? '#1c3620' : '#244426');
         c.fillStyle = g; c.beginPath(); c.arc(cx + ox, cy + oy, rr, 0, Math.PI * 2); c.fill();
       }
     }

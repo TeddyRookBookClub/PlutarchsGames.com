@@ -1257,5 +1257,5 @@
   W.addEventListener('pagehide', saveGame);
 
   shell(); startScreen(); W.requestAnimationFrame(frame);
-  W.__fest = { get S() { return S; }, get visitors() { return visitors; }, get staff() { return staff; }, get objById() { return objById; }, place: place, placePath: placePath, begin: begin, newState: newState, setSpeed: setSpeed, step: step, rotate: rotate, undo: undo, setTool: setTool, hire: hire, endDay: endDay, startMove: startMove, dropMove: dropMove, demolish: demolish, openStats: openStats, openSaves: openSaves, get buildRot() { return buildRot; }, litter: function () { return litter; } };
+  W.__fest = { get S() { return S; }, get cam() { return cam; }, select: select, P: A.P, get DAY() { return DAY; }, get DEF() { return DEF; }, get visitors() { return visitors; }, get staff() { return staff; }, get objById() { return objById; }, place: place, placePath: placePath, begin: begin, newState: newState, setSpeed: setSpeed, step: step, rotate: rotate, undo: undo, setTool: setTool, hire: hire, endDay: endDay, startMove: startMove, dropMove: dropMove, demolish: demolish, openStats: openStats, openSaves: openSaves, get buildRot() { return buildRot; }, litter: function () { return litter; } };
 })(window, document);
