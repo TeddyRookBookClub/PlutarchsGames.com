@@ -83,10 +83,26 @@
       buttons: [on(B.B), on(B.A), on(B.Y), on(B.X), on(B.L), on(B.R), on(B.ZL), on(B.ZR), on(B.MINUS), on(B.PLUS), on(B.LS), on(B.RS), on(B.UP), on(B.DOWN), on(B.LEFT), on(B.RIGHT), on(B.HOME)],
       axes: s.ax.slice(), vibrationActuator: null };
   }
+  // Once woken, Chrome also shows the controller as a raw gamepad with its own button order (measured on a Mac:
+  // 0 B, 1 A, 4 R, 6 +, 8 down, 9 right, 10 left, 11 up, 12 L, 13 ZL; the rest follow the same pattern).
+  // Turn that into the standard layout too, so the controller works even before the second permission.
+  var RAW = { B: 0, A: 1, Y: 2, X: 3, R: 4, ZR: 5, PLUS: 6, RS: 7, DOWN: 8, RIGHT: 9, LEFT: 10, UP: 11, L: 12, ZL: 13, MINUS: 14, LS: 15, HOME: 16 };
+  var rawC = null;
+  function fromRaw(g) {
+    var bt = function (k) { var x = g.buttons[RAW[k]]; var p = !!(x && x.pressed); return { pressed: p, touched: p, value: p ? 1 : 0 }; };
+    var a = g.axes, A = function (i) { return a[i] || 0; };
+    if (!rawC) { var r = [A(0), A(1), A(3), A(5)]; if (r.every(function (v) { return Math.abs(v) < 0.25; })) rawC = r; }
+    var c = rawC || [0, 0, 0, 0], n = function (v, k) { var d = (v - c[k]) / 0.8; if (Math.abs(d) < 0.12) return 0; return Math.max(-1, Math.min(1, Math.sign(d) * (Math.abs(d) - 0.12) / 0.88)); };
+    return { id: g.id, index: g.index, connected: true, mapping: 'standard', timestamp: g.timestamp,
+      buttons: [bt('B'), bt('A'), bt('Y'), bt('X'), bt('L'), bt('R'), bt('ZL'), bt('ZR'), bt('MINUS'), bt('PLUS'), bt('LS'), bt('RS'), bt('UP'), bt('DOWN'), bt('LEFT'), bt('RIGHT'), bt('HOME')],
+      axes: [n(A(0), 0), -n(A(1), 1), n(A(3), 2), -n(A(5), 3)], vibrationActuator: null };
+  }
+  P.raw = function () { var g = Array.prototype.slice.call(realGet() || []).find(mine); return g ? g.buttons.map(function (b, i) { return b.pressed ? i : -1; }).filter(function (i) { return i >= 0; }) : null; };
   navigator.getGamepads = function () {
     var real = Array.prototype.slice.call(realGet() || []);
-    if (!P.ready || !P.state || performance.now() - P.last > 2000) return real;
-    var out = [pad()]; real.forEach(function (g) { if (g && !mine(g)) out.push(g); });
+    var live = P.ready && P.state && performance.now() - P.last < 2000;
+    var out = live ? [pad()] : [];
+    real.forEach(function (g) { if (!g) return; if (mine(g)) { if (!live && g.mapping !== 'standard') out.push(fromRaw(g)); else if (!live) out.push(g); } else out.push(g); });
     return out;
   };
 
@@ -137,4 +153,10 @@
   if (navigator.usb) navigator.usb.addEventListener('connect', function (e) { if (e.device.vendorId === VID) { P.woke = false; P.ready = false; P.hid = null; center = null; calib = []; commonSent = false; setTimeout(auto, 400); } });
   if (navigator.usb) navigator.usb.addEventListener('disconnect', function (e) { if (e.device === P.usb) { P.usb = null; P.woke = false; P.ready = false; P.hid = null; center = null; calib = []; ui(); } });
   if (D.readyState === 'loading') D.addEventListener('DOMContentLoaded', auto); else auto();
+  // add #padtest to the address to see what the browser gets from each button
+  if (/padtest/.test(location.hash)) setInterval(function () {
+    var el = D.getElementById('pc2test'); if (!el) { el = D.createElement('pre'); el.id = 'pc2test'; el.style.cssText = 'position:fixed;right:10px;top:10px;z-index:99999;background:#000c;color:#7f7;font:13px monospace;padding:8px;border-radius:8px;pointer-events:none'; D.body.appendChild(el); }
+    var g = navigator.getGamepads()[0], names = ['B', 'A', 'Y', 'X', 'L', 'R', 'ZL', 'ZR', '−', '+', 'LS', 'RS', 'up', 'down', 'left', 'right', 'home'];
+    el.textContent = 'raw buttons: ' + JSON.stringify(P.raw()) + '\nread as: ' + (g ? g.buttons.map(function (b, i) { return b.pressed ? names[i] : ''; }).filter(Boolean).join(' ') : '-') + '\nsticks: ' + (g ? g.axes.map(function (v) { return v.toFixed(2); }).join(' ') : '-') + '\nvia: ' + (P.ready ? 'HID' : 'browser gamepad');
+  }, 100);
 })(window, document);

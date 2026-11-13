@@ -1662,7 +1662,8 @@ function playerInput() {
   const gp = navigator.getGamepads ? Array.from(navigator.getGamepads()).find(p => p) : null;
   if (gp) {
     const ax = gp.axes[0] || 0; if (Math.abs(ax) > .15) steer = ax; const b = i => gp.buttons[i] ? gp.buttons[i].value : 0;
-    throttle = Math.max(throttle, b(7), b(1)); brake = Math.max(brake, b(6)); drift = drift || b(5) > .5 || b(4) > .5; boost = boost || b(2) > .5 || b(3) > .5;
+    // A or ZR go, B or ZL brake, L or R drift, X boost, Y item (in padPoll)
+    throttle = Math.max(throttle, b(7), b(1)); brake = Math.max(brake, b(6), b(0)); drift = drift || b(5) > .5 || b(4) > .5; boost = boost || b(3) > .5;
     if (b(14)) steer = -1; if (b(15)) steer = 1;
   }
   G.lookBack = !!KEYS.KeyB;
@@ -1882,12 +1883,14 @@ function padPoll() {
   let gp = null; try { gp = navigator.getGamepads ? Array.from(navigator.getGamepads()).find(p => p) : null; } catch (e) { } if (!gp) return;
   const hit = i => { const v = !!(gp.buttons[i] && gp.buttons[i].pressed), was = padWas[i]; padWas[i] = v; return v && !was; }, plus = hit(9), a = hit(1), b = hit(0), minus = hit(8), up = hit(12), dn = hit(13);
   if (G.state === 'menu' && !$('menu').hidden) { if (plus || a) startRace(); if (up || dn) { const i = TRACKS.findIndex(t => t.id === OPT.track); OPT.track = TRACKS[(i + (dn ? 1 : TRACKS.length - 1)) % TRACKS.length].id; syncMenu(); loadTrack(); } }
-  else if (G.state === 'racing' || G.state === 'countdown') { if (plus) togglePause(); if (minus) { G.view = (G.view + 1) % 3; } if (b && G.player) useItem(G.player); }
+  else if (G.state === 'racing' || G.state === 'countdown') { if (plus) togglePause(); if (minus) { G.view = (G.view + 1) % 3; } if (hit(2) && G.player) useItem(G.player); }
   else if (G.state === 'paused') { if (plus || a) togglePause(); else if (b) { Sound.pause(false); toMenu(); } }
   else if (G.state === 'finished' && G.finishShown) { if (plus || a) { if (!$('cupEnd').hidden) gpBegin(); else $('btnAgain').click(); } else if (b) toMenu(); }
 }
+let padHinted = false;
 function frame(now) {
   requestAnimationFrame(frame); padPoll();
+  if (!padHinted && navigator.getGamepads && Array.from(navigator.getGamepads()).some(p => p)) { padHinted = true; toast('🎮 A or ZR go · B or ZL brake · stick steers · L/R drift · X boost · Y item · + pause · − camera', '', 7000); }
   const dt = Math.min((now - lastT) / 1000 || 0, .05); lastT = now;
   if (!G.T || !G.W) return;
   const paused = G.state === 'paused'; if (!paused) G.t += dt;
@@ -1976,7 +1979,7 @@ const Sound = {
 /* ---------- HUD ---------- */
 const fmtSpeed = v => { const k = Math.round(v * KMH) + ' km/h', m = Math.round(v * KMH * .621) + ' mph'; return OPT.units === 'mph' ? m : OPT.units === 'kmh' ? k : k + ' / ' + m; };
 const fmtGap = t => (t >= 0 ? '+' : '−') + Math.abs(t).toFixed(t < 10 && t > -10 ? 3 : 1);
-function toast(text, cls) { const d = document.createElement('div'); d.className = 'toast ' + (cls || ''); d.textContent = text; const box = $('toasts'); box.appendChild(d); while (box.children.length > 4) box.removeChild(box.firstChild); setTimeout(() => d.remove(), 2600); }
+function toast(text, cls, ms) { const d = document.createElement('div'); d.className = 'toast ' + (cls || ''); d.textContent = text; const box = $('toasts'); box.appendChild(d); while (box.children.length > 4) box.removeChild(box.firstChild); setTimeout(() => d.remove(), ms || 2600); }
 function showScreen(id) { for (const s of ['menu', 'pause', 'results', 'browser', 'cupEnd']) $(s).hidden = s !== id; }
 const HUDS = ['full', 'standard', 'minimal', 'off'], HUD_NAME = { full: 'Broadcast display', standard: 'Standard display', minimal: 'Minimal display', off: 'Display hidden' };
 function applyHud() { const h = $('hud'); HUDS.forEach(k => h.classList.toggle('hud-' + k, OPT.hud === k)); }
