@@ -50,10 +50,9 @@
     var dv = ev.data, id = ev.reportId, btn = 0, ls, rs;
     if (id === 0x05 && dv.byteLength >= 16) { btn = dv.getUint32(4, true); ls = u12(dv, 10); rs = u12(dv, 13); }
     else if (id === 0x09 && dv.byteLength >= 11) {
-      var b0 = dv.getUint8(2), b1 = dv.getUint8(3), b2 = dv.getUint8(4);
-      if (b0 & 1) btn |= B.Y; if (b0 & 2) btn |= B.X; if (b0 & 4) btn |= B.B; if (b0 & 8) btn |= B.A; if (b0 & 0x40) btn |= B.R; if (b0 & 0x80) btn |= B.ZR;
-      if (b1 & 1) btn |= B.MINUS; if (b1 & 2) btn |= B.PLUS; if (b1 & 4) btn |= B.RS; if (b1 & 8) btn |= B.LS; if (b1 & 0x10) btn |= B.HOME; if (b1 & 0x20) btn |= B.CAP;
-      if (b2 & 1) btn |= B.DOWN; if (b2 & 2) btn |= B.UP; if (b2 & 4) btn |= B.RIGHT; if (b2 & 8) btn |= B.LEFT; if (b2 & 0x40) btn |= B.L; if (b2 & 0x80) btn |= B.ZL;
+      // bit i of these three bytes is the button Chrome numbers i (checked on a real controller: B 0, A 1, Y 2, R 4, ZR 5, + 6, L 12, ZL 13, − 14)
+      var w = dv.getUint8(2) | (dv.getUint8(3) << 8) | (dv.getUint8(4) << 16);
+      for (var k in RAW) if (B[k] && (w & (1 << RAW[k]))) btn |= B[k];
       ls = u12(dv, 5); rs = u12(dv, 8);
     } else return;
     // learn where the sticks rest (they are rarely exactly at 2048)
