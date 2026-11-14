@@ -144,7 +144,12 @@ function buildWalk(def) {
     else if (c === 'M' || c === 'V') {
       if (cols[x - 1] && cols[x - 1][y] === c) continue; // one platform per run of letters
       let n = 1; while (cols[x + n] && cols[x + n][y] === c) n++;
-      ents.push({ type: 'plat', axis: c === 'M' ? 'x' : 'y', x0: px, y0: py, x: px, y: py, w: n * TILE, h: 16, range: c === 'M' ? 3.2 * TILE : 3 * TILE, ph: R() * TAU, dx: 0, dy: 0 });
+      let range = c === 'M' ? 3.2 * TILE : 3 * TILE;
+      if (c === 'V') { // stop above whatever is underneath (thorns or ground), so riding it down never hurts
+        let floor = 99; for (let k = 0; k < n; k++) for (let yy = y + 1; yy < (cols[x + k] || []).length; yy++) if ('#^='.includes(cols[x + k][yy])) { floor = Math.min(floor, yy); break; }
+        if (floor < 99) range = Math.max(TILE * .75, Math.min(range, floor * TILE - py - TILE * .8));
+      }
+      ents.push({ type: 'plat', axis: c === 'M' ? 'x' : 'y', x0: px, y0: py, x: px, y: py, w: n * TILE, h: 16, range, ph: R() * TAU, dx: 0, dy: 0 });
     }
   }
   if (def.boss) {
@@ -302,6 +307,9 @@ function stepEnts(dt) {
       if (p.vy > 0 && Math.abs(p.x - e.x) < 34 && p.y >= e.y - 24 && p.y <= e.y - 4) { p.y = e.y - 24; p.vy = K.jump ? -1250 : -1050; p.ground = false; e.sq = 1; Sound.tone(180, .3, .14, 'triangle', 0, 520); p.roll = 0; }
     }
   }
+  // a tip the first time each tricky enemy shows up
+  for (const e of L.ents) if (e.type === 'enemy' && e.alive && TIPS[e.kind] && !SAVE['tip_' + e.kind] && Math.abs(e.x - p.x) < 520) { SAVE['tip_' + e.kind] = 1; save(); L.tip = { txt: TIPS[e.kind], t: 5 }; }
+  if (L.tip) L.tip.t -= dt;
   // pickups and contact
   for (const e of L.ents) {
     if (e.gone) continue;
@@ -315,7 +323,9 @@ function stepEnts(dt) {
       const ex = Math.abs(e.x - p.x) < (e.w + p.w) / 2 - 4, ey = Math.abs((e.y - e.h / 2) - (p.y - p.h / 2)) < (e.h + p.h) / 2 - 4;
       if (!ex || !ey) continue;
       const fromAbove = p.vy > 60 && p.y - e.y < -e.h * .35;
-      if (fromAbove && !e.spiky) { kill(e, 'stomp'); p.vy = K.jump ? -820 : -560; p.roll = 0; }
+      if (fromAbove && (!e.spiky || e.kind === 'wasp')) { kill(e, 'stomp'); p.vy = K.jump ? -820 : -560; p.roll = 0; }
+      else if (fromAbove && e.kind === 'hedgehog') { p.vy = K.jump ? -760 : -520; p.roll = 0; Sound.tone(700, .06, .06, 'square', 0, 300); popText(e.x, e.y - 40, 'Spiky! Roll into it', '#ffd0a0'); }
+      else if (p.roll > 0 && (e.kind === 'hedgehog' || e.kind === 'wasp')) kill(e, 'roll');
       else if (p.roll > 0 && !e.spiky && !e.fly) kill(e, 'roll');
       else if (p.roll > 0 && e.kind === 'crow' && e.y > p.y - 60) kill(e, 'roll');
       else hurt();
@@ -323,6 +333,7 @@ function stepEnts(dt) {
   }
   if (p.ground) L.combo = 0;
 }
+const TIPS = { hedgehog: 'Hedgehogs are spiky: roll into them (X), slap the ground (↓ + X) or throw a barrel', wasp: 'Wasps: bounce on them, roll into them, or throw a barrel', frog: 'Frogs hop at you: bounce on them or roll' };
 function stepEnemy(e, dt) {
   e.t += dt;
   if (!e.alive) { e.vy += 1800 * dt; e.x += e.vx * dt; e.y += e.vy * dt; e.spin = (e.spin || 0) + dt * 10; if (e.y > L.pxH + 200) e.gone = true; return; }
@@ -978,6 +989,7 @@ function frame(now) {
     }
     if (L.kind === 'walk') drawWalk(); else drawCartLevel();
     drawHUD();
+    if (L.tip && L.tip.t > 0) { ctx.globalAlpha = Math.min(1, L.tip.t); ctx.fillStyle = 'rgba(10,20,15,.8)'; ctx.fillRect(W / 2 - 330, 92, 660, 40); txt(L.tip.txt, W / 2, 118, 17, '#ffe9b0', 'center', false); ctx.globalAlpha = 1; }
     if (L.done) {
       const a = clamp(L.doneT / .6, 0, 1); ctx.fillStyle = `rgba(0,20,10,${.5 * a})`; ctx.fillRect(0, 0, W, H);
       txt('Level clear!', W / 2, H / 2 - 30, 60 * (.6 + .4 * a), '#ffe066'); txt(S.letters === 15 ? 'All four letters!  J · I · M · O' : 'Letters ' + 'JIMO'.split('').map((c, i) => S.letters & (1 << i) ? c : '·').join(' '), W / 2, H / 2 + 26, 22, '#fff');

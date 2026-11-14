@@ -8,8 +8,8 @@
    Legend
      #  ground            =  girder (jump up through, stand on top)     ^  thorns (hurt)
      o  bottle cap        L  letter (J, I, M, O in order)                K  checkpoint barrel
-     p  possum (stomp or roll it)        h  hedgehog (spiky: throw a barrel, or slap the ground)
-     c  crow (flies in a wave)           z  wasp (can't be stomped; only a barrel stops it)
+     p  possum (stomp or roll it)        h  hedgehog (spiky: roll into it, slap the ground or throw a barrel)
+     c  crow (flies in a wave)           z  wasp (stomp it, roll into it or throw a barrel)
      B  barrel to pick up and throw      T  tyre (big bounce)            M  moving girder (side to side)
      V  moving girder (up and down)      G  goal                          H  heart (heals one)        */
 
